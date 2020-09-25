@@ -1,28 +1,36 @@
 <template>
   <div id="app">
+    <a-alert @close="onAlertClose" v-if="globalAlert.visible" style="z-index: 1201;position:fixed;width:100%;" type="error" banner closable>
+      <template v-slot:message>
+        <ul style="padding: 0; margin:0;">
+          <li v-html="globalAlert.msg"></li>
+          <li v-for="msg in globalAlert.msgList">{{ `${ msg.key }: ${msg.value}` }}</li>
+        </ul>
+      </template>
+    </a-alert>
     <router-view/>
   </div>
 </template>
 
-<style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-
-#nav {
-  padding: 30px;
-
-  a {
-    font-weight: bold;
-    color: #2c3e50;
-
-    &.router-link-exact-active {
-      color: #42b983;
-    }
+<script>
+import {mapMutations, mapState} from 'vuex'
+export default {
+  computed: {
+    ...mapState('common', [
+      'globalAlert',
+    ]),
+  },
+  methods: {
+    ...mapMutations('common', [
+      'updateCommonState',
+    ]),
+    onAlertClose() {
+      this.updateCommonState([{
+        key: 'globalAlert.visible',
+        value: false
+      }]);
+    },
   }
 }
-</style>
+</script>
+

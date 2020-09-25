@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
-const bcrypt = require('bcrypt');
+// const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Page = require('./page');
 
@@ -80,21 +80,19 @@ userSchema.methods.generateAuthToken = async function () {
 };
 
 userSchema.statics.findByCredentials = async (email, password) => {
-    const user = await User.findOne({ email });
+    return await User.findOne({ email, password });
 
-    if (!user) {
-        throw new Error('Unable to login')
-    }
-
+/*
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
         throw new Error('Unable to login')
     }
+*/
 
-    return user
 };
 
+/*
 userSchema.pre('save', async function (next) {
     const user = this;
 
@@ -104,6 +102,7 @@ userSchema.pre('save', async function (next) {
 
     next()
 });
+*/
 
 // Delete user pages when user is removed
 userSchema.pre('remove', async function (next) {

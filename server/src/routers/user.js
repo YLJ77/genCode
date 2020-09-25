@@ -19,10 +19,14 @@ router.post('/user', async (req, res) => {
 router.post('/user/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password);
-        const token = await user.generateAuthToken();
-        res.send(formatOutput({data: {user,token}}));
+        if (user) {
+            const token = await user.generateAuthToken();
+            res.send(formatOutput({data: {user,token}}));
+        } else {
+            res.send(formatOutput({msg: '账号或密码错误'}));
+        }
     } catch (e) {
-        res.status(400).send({errMsg: '账号或密码错误'})
+        res.status(400).send(e)
     }
 });
 

@@ -1,6 +1,7 @@
-module.exports.formatOutput = ({data,  type = 'success', msgVisible = false}) => {
+module.exports.formatOutput = ({data,  msg}) => {
     return {
         data,
-        code: msgVisible ? 1 : 0
+        msg,
+        code: data ? 1 : 0
     }
 };
