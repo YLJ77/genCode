@@ -2,10 +2,11 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, Input, message, Alert, Menu, PageHeader, Table } from 'ant-design-vue';
+import { Button, Form, Input, message, Alert, Menu, PageHeader, Table, Modal } from 'ant-design-vue';
 import '@/assets/common.scss'
 
 const app = createApp(App);
+window.vm = app;
 app.config.globalProperties.$message = message;
 app.use(Button);
 app.use(Form);
@@ -14,5 +15,6 @@ app.use(Alert);
 app.use(Menu);
 app.use(PageHeader);
 app.use(Table);
+app.use(Modal);
 
-app.use(store).use(router).mount('#app')
+app.use(store).use(router).mount('#app');

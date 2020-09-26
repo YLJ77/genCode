@@ -4,12 +4,11 @@
         style="width: 300px;margin-top:50px;"
         :field-cfg-list="fieldCfgList"
         :footer-visible="false"
-        :form="form"
-        :rules="rules"
+        :form-cfg="formCfg"
     >
       <template v-slot:footer="{props:{getForm}}">
         <div class="app-hc-vc" style="margin-top:20px;">
-          <a-button @click="toLogin({getForm})" type="primary" :loading="form.loading">登录</a-button>
+          <a-button @click="toLogin({getForm})" type="primary" :loading="loginBtnLoading">登录</a-button>
         </div>
       </template>
     </AppForm>
@@ -20,7 +19,7 @@
 
 import AppForm from "@/components/AppForm";
 import {mapActions} from 'vuex'
-import {genFormAndRules} from "../utils/appFunc";
+import {genFormAndRules} from "@/utils/appFunc";
 
 export default {
   name: 'Home',
@@ -28,9 +27,10 @@ export default {
     const fieldCfgList = [
       {
         type: 'input',
-        label: '账号',
+        formItem: {
+          label: '账号',
+        },
         decorator: ['email', {
-          initialValue: 'foo',
           rules: [
             {required: true, message: '请输入账号', trigger: 'change' }
           ]
@@ -38,7 +38,9 @@ export default {
       },
       {
         type: 'input',
-        label: '密码',
+        formItem: {
+          label: '密码',
+        },
         inputType: 'password',
         decorator: ['password', {
           rules: [
@@ -47,12 +49,11 @@ export default {
         }]
       }
     ];
-    const {form, rules} = genFormAndRules(fieldCfgList);
-    console.warn(form,rules);
+    const formCfg = genFormAndRules(fieldCfgList);
     return {
-      form,
-      rules,
-      fieldCfgList
+      formCfg,
+      fieldCfgList,
+      loginBtnLoading: false
     }
   },
   methods: {
@@ -60,9 +61,10 @@ export default {
     toLogin({getForm}) {
       getForm().validate().then(fieldsValue => {
         this.login({
-          cb: loading => this.form.loading = loading,
+          cb: loading => this.loginBtnLoading = loading,
           params: fieldsValue
-        }).then(() => {
+        }).then((res) => {
+          localStorage.setItem('token', res.data.token);
           this.$message.success('登录成功');
           this.$router.push('/home');
         })

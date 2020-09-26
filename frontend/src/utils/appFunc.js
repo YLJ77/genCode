@@ -20,8 +20,8 @@ export function updateState(state, list) {
 export const genFormAndRules = (cfgList) => {
     return cfgList.reduce((acc,cfg) => {
         const {decorator:[decoratorId, {rules,initialValue} = {rules:[]}]} = cfg;
-        acc.form[decoratorId] = initialValue;
+        acc.model[decoratorId] = initialValue;
         acc.rules[decoratorId] = rules;
         return acc;
-    }, {form:{},rules:{}})
+    }, {model:{},rules:{}})
 }

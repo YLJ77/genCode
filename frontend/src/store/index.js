@@ -1,5 +1,6 @@
 import { createStore } from 'vuex'
 import login from './modules/login'
+import user from './modules/user'
 import common from './common'
 
 export default createStore({
@@ -11,6 +12,7 @@ export default createStore({
   },
   modules: {
     login,
-    common
+    common,
+    user
   }
 })

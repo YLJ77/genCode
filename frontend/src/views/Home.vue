@@ -11,7 +11,7 @@
           mode="inline"
           @click="handleClick"
           theme="dark"
-          :default-selected-keys="['createPage']"
+          :default-selected-keys="defaultSelectedKeys"
       >
         <a-menu-item v-for="menu in menuList" :key="menu.key">
           <home-outlined/>
@@ -24,22 +24,24 @@
 </template>
 
 <script>
-import {
-  HomeOutlined,
-} from '@ant-design/icons-vue';
+import { HomeOutlined, } from '@ant-design/icons-vue';
+import {reactive, toRefs} from 'vue'
+
 export default {
-  data() {
-    return {
-      menuList: [
-        { key: 'createPage' },
-        { key: 'foo' }
-      ]
-    }
-  },
-  methods: {
-    handleClick() {
+  setup() {
+    function handleClick() {
 
     }
+    const data = reactive({
+      defaultSelectedKeys: ['user'],
+      menuList: [
+        { key: 'user' },
+        { key: 'createPage' },
+      ]
+    });
+    return {...toRefs(data), handleClick};
+  },
+  methods: {
   },
   components: {
     HomeOutlined

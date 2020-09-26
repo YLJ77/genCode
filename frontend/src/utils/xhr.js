@@ -1,14 +1,13 @@
 import axios from 'axios'
-import commonStore from '@/store/common'
-import {message} from "ant-design-vue";
+import {message,Modal} from "ant-design-vue";
 
 axios.defaults.baseURL = 'http://127.0.0.1:3000';
 
 function getHeader() {
-    const pageToken = localStorage.getItem('pageToken');
-    if (pageToken) {
+    const token = localStorage.getItem('token');
+    if (token) {
         return {
-            Authorization: pageToken
+            Authorization: token
         };
     }
     return {}
@@ -16,8 +15,7 @@ function getHeader() {
 
 export default class Request {
     static updateState({ msg = '', msgList = [] }) {
-        const { mutations: { updateCommonState }, state } = commonStore;
-        updateCommonState(state, [
+        window.vm.updateCommonState([
             {
                 key: 'globalAlert.visible',
                 value: true
@@ -32,17 +30,25 @@ export default class Request {
             },
         ]);
     }
+    static visibleLoginModal(msg) {
+        Modal.warn({
+            title: '提示',
+            content: msg,
+            okText: "去登录",
+            zIndex: 2000,
+            onOk: function () {
+                window.vm.config.globalProperties.$router.push('/');
+            }
+        });
+    }
     static fetch({
                      url,
                      method,
                      params = {},
-                     data = {},
                      headers = getHeader(),
                      cb = Function.prototype,
-                     auth
                  }) {
-        if (auth) axios.defaults.headers.accessToken = auth;
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const requestInfo = {
                 url,
                 method,
@@ -55,34 +61,50 @@ export default class Request {
             }
             cb(true);
             axios.request(requestInfo).then(res => {
-                const {data,msg,code} = res.data;
-                if (code === 1) {
-                    resolve(data);
+                const {msg,code} = res.data;
+                if (code === 0) {
+                    resolve(res.data);
+                } else if (code === -1) {  // 登录过期
+                    Request.visibleLoginModal(msg);
                 } else {
                     message.error(msg)
                 }
             }).catch(err => {
-                const data = err?.response?.data;
-                if (data) {
-                    if (typeof data === 'string') {
-                        if (data[0].trim() === '<') {
-                            let msg = data.match(/<body[^>]*>(.|\n)*<\/body>/gi)?.[0]?.replace(/body/g,'div') || '服务器重启中,请稍后再试！';
-                            Request.updateState({msg});
-                        } else {
-                            Request.updateState({msg: data});
-                        }
-                    } else {
-                        Request.updateState({msg: '', msgList: Object.keys(data).filter((entry, index) => index < 20).reduce((acc, key) => {
-                                if (key !== 'timestamp') acc.push({ key, value: data[key] });
-                                return acc;
-                            }, []) });
-                    }
-                } else {
-                    Request.updateState({msgList: [
-                            {key: 'path', value: url},
-                            {key: 'msg', value: '未知错误'}
-                        ]});
-                }
+                const {
+                    config: {url,method},
+                    data: {msg},
+                    status, statusText
+                } = err?.response;
+                const msgList = [
+                    {key: 'url', value: url},
+                    {key: 'method', value: method},
+                    {key: 'status', value: status},
+                    {key: 'statusText', value: statusText},
+                    {key: 'msg', value: msg},
+                ];
+                Request.updateState({ msgList });
+                /*
+                                if (data) {
+                                    if (typeof data === 'string') {
+                                        if (data[0].trim() === '<') {
+                                            let msg = data.match(/<body[^>]*>(.|\n)*<\/body>/gi)?.[0]?.replace(/body/g,'div') || '服务器重启中,请稍后再试！';
+                                            Request.updateState({msg});
+                                        } else {
+                                            Request.updateState({msg: data});
+                                        }
+                                    } else {
+                                        Request.updateState({msg: '', msgList: Object.keys(data).filter((entry, index) => index < 20).reduce((acc, key) => {
+                                                if (key !== 'timestamp') acc.push({ key, value: data[key] });
+                                                return acc;
+                                            }, []) });
+                                    }
+                                } else {
+                                    Request.updateState({msgList: [
+                                            {key: 'path', value: url},
+                                            {key: 'msg', value: '未知错误'}
+                                        ]});
+                                }
+                */
             }).finally(() => {
                 cb(false);
             });

@@ -4,7 +4,7 @@ const router = new express.Router();
 const auth = require('../middleware/auth');
 const {formatOutput} = require('../util/appFunc');
 
-router.post('/user', async (req, res) => {
+router.post('/user/add', async (req, res) => {
     const user = new User(req.body);
 
     try {
@@ -46,24 +46,30 @@ router.post('/user/logoutAll', auth, async (req, res) => {
     try {
         req.user.tokens = [];
         await req.user.save();
-        res.send(formatOutput({data: {msg: 'success'}}));
+        res.send(formatOutput());
     } catch (e) {
         res.status(400).send(e)
     }
 });
 
-router.get('/user', auth, async (req, res) => {
+router.post('/user/list', auth, async (req, res) => {
     try {
-        const user = await User.find({});
-        res.send(formatOutput({data: {user}}));
+        const {email} = req.body;
+        const reg = new RegExp(email, 'i');
+        const users = await User.find({
+            $or: [
+                {email: {$regex: reg}}
+            ]
+        })
+        res.send(formatOutput({data: {list:users}}));
     } catch (e) {
-        res.status(500).send(e)
+        res.status(500).send(formatOutput({data: e, code: 1}))
     }
 });
 
-router.get('/user/me', auth, async (req, res) => {
-    res.send(req.user);
-    res.send(formatOutput({data: {user:req.user}}));
+router.get('/user/me', auth, async (req, res,next) => {
+    res.send(formatOutput({data: req.user}));
+    next();
 });
 
 router.patch('/user/me', auth, async (req, res) => {

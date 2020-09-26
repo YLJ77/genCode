@@ -13,12 +13,17 @@
 </template>
 
 <script>
+
 import {mapMutations, mapState} from 'vuex'
+
 export default {
   computed: {
     ...mapState('common', [
       'globalAlert',
     ]),
+  },
+  mounted() {
+    window.vm.updateCommonState = this.updateCommonState;
   },
   methods: {
     ...mapMutations('common', [

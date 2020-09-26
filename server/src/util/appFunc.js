@@ -1,7 +1,9 @@
-module.exports.formatOutput = ({data,  msg}) => {
+module.exports.formatOutput = ({data = {},  msg, code = 0} = {}) => {
+    msg = msg || 'success';
+    if (code === 1) msg = '服务器内部错误';
     return {
         data,
-        msg,
-        code: data ? 1 : 0
+        msg: msg || 'success',
+        code
     }
 };
