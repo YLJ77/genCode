@@ -10,6 +10,7 @@ MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) =>
         return console.log('Unable to connect to database!')
     }
 
+/*
     const db = client.db(databaseName);
     db.collection('pageCfg').insertOne({
         showSelection: false,
@@ -21,7 +22,8 @@ MongoClient.connect(connectionURL, { useNewUrlParser: true }, (error, client) =>
        }
        console.log(cfg);
     });
-    
+*/
+
     // db.collection('users').findOne({ _id: new ObjectID("5c1113239cbfe605241f9071") }, (error, user) => {
     //     if (error) {
     //         return console.log('Unable to fetch')

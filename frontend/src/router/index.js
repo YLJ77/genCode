@@ -14,9 +14,13 @@ const routes = [
     component: () => import('@/views/Home'),
     children: [
       {
-        path: '',
+        path: 'user',
         component: () => import('@/views/User')
-      }
+      },
+      {
+        path: 'create-page',
+        component: () => import('@/views/CreatePage')
+      },
     ]
   },
   {

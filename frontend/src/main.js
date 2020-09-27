@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
-import { Button, Form, Input, message, Alert, Menu, PageHeader, Table, Modal } from 'ant-design-vue';
+import { Button, Form, Input, message, Alert, Menu, PageHeader, Table, Modal, Collapse } from 'ant-design-vue';
 import '@/assets/common.scss'
 
 const app = createApp(App);
@@ -16,5 +16,6 @@ app.use(Menu);
 app.use(PageHeader);
 app.use(Table);
 app.use(Modal);
+app.use(Collapse);
 
 app.use(store).use(router).mount('#app');

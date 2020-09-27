@@ -3,15 +3,17 @@ const Page = require('../db/models/page');
 const router = new express.Router();
 const auth = require('../middleware/auth');
 const {formatOutput} = require('../util/appFunc');
+const {genPage} = require("../genCode/page/genPage")
 
-router.post('/page', auth, async (req,res) => {
+router.post('/page/add', auth, async (req,res) => {
     const page = new Page({
             ...req.body,
             owner: req.user._id
         });
     try {
         await page.save();
-        res.status(201).send(formatOutput({data: {page}}));
+        res.status(201).send(formatOutput({data: page}));
+        genPage({cfg: req.body});
     } catch (e) {
         res.status(400).send(e);
     }

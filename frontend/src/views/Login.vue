@@ -66,7 +66,7 @@ export default {
         }).then((res) => {
           localStorage.setItem('token', res.data.token);
           this.$message.success('登录成功');
-          this.$router.push('/home');
+          this.$router.push('/home/create-page');
         })
       })
     }

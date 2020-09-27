@@ -1,15 +1,14 @@
 const mongoose = require('mongoose');
 const pageSchema = new mongoose.Schema({
-    pageType: {
-        type: String,
-        enum: ['page', 'form'],
+    pageCfg: {
+        type: JSON,
         trim: true,
+        required: true
+/*
+        enum: ['page', 'form'],
         lowercase: true,
         default: 'page'
-    },
-    actionVisible: {
-        type: Boolean,
-        default: true
+*/
     },
     owner: {
         type: mongoose.Schema.Types.ObjectID,

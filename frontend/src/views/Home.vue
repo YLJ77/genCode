@@ -29,21 +29,21 @@ import {reactive, toRefs} from 'vue'
 
 export default {
   setup() {
-    function handleClick() {
-
-    }
     const data = reactive({
-      defaultSelectedKeys: ['user'],
+      defaultSelectedKeys: ['create-page'],
       menuList: [
         { key: 'user' },
-        { key: 'createPage' },
+        { key: 'create-page' },
       ]
     });
-    return {...toRefs(data), handleClick};
+    return {...toRefs(data)};
   },
   methods: {
-  },
-  components: {
+    handleClick(item) {
+      this.$router.push(`/home/${item.key}`);
+    }
+},
+components: {
     HomeOutlined
   }
 }
