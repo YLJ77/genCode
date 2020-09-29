@@ -11,9 +11,9 @@ router.post('/page/add', auth, async (req,res) => {
             owner: req.user._id
         });
     try {
-        await page.save();
+        await genPage({cfg: req.body});
+        // await page.save();
         res.status(201).send(formatOutput({data: page}));
-        genPage({cfg: req.body});
     } catch (e) {
         res.status(400).send(e);
     }

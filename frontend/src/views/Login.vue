@@ -4,7 +4,6 @@
         style="width: 300px;margin-top:50px;"
         :field-cfg-list="fieldCfgList"
         :footer-visible="false"
-        :form-cfg="formCfg"
     >
       <template v-slot:footer="{props:{getForm}}">
         <div class="app-hc-vc" style="margin-top:20px;">
@@ -19,7 +18,6 @@
 
 import AppForm from "@/components/AppForm";
 import {mapActions} from 'vuex'
-import {genFormAndRules} from "@/utils/appFunc";
 
 export default {
   name: 'Home',
@@ -49,9 +47,7 @@ export default {
         }]
       }
     ];
-    const formCfg = genFormAndRules(fieldCfgList);
     return {
-      formCfg,
       fieldCfgList,
       loginBtnLoading: false
     }

@@ -1,12 +1,11 @@
 <template>
   <div>
-<!--    <a-form ref="ruleForm" v-bind="formCfg" :model="form" :rules="rules" :layout="layout">-->
-    <a-form ref="ruleForm" v-bind="formCfg" :layout="formCfg.layout || 'inline'">
+    <a-form ref="ruleForm" v-bind="formCfg" :model="form" :rules="rules" :layout="formCfg.layout || 'inline'">
       <div :class="{'search-bar': isSearchBar}">
         <a-form-item v-for="(cfg, idx) in fieldCfgList" v-bind="cfg.formItem" :name="cfg.decorator[0]" :key="idx">
           <a-input v-if="cfg.type === 'input'"
              :type="cfg.inputType || 'text'"
-             v-model:value="formCfg.model[getDecoratorId(cfg)]"
+             v-model:value="form[getDecoratorId(cfg)]"
              v-bind="cfg.field || {}"
           />
         </a-form-item>
@@ -32,6 +31,8 @@
 </style>
 <script>
 import {reactive,toRefs,computed} from 'vue'
+import {genFormAndRules} from "@/utils/appFunc";
+
 export default {
   props: {
     saveBtnLoading: {
@@ -52,7 +53,7 @@ export default {
     },
     formCfg: {
       type: Object,
-      required: true
+      default: () => ({})
     },
     fieldCfgList: {
       required: true,
@@ -70,9 +71,17 @@ export default {
       ...toRefs(data),
     }
   },
+  data() {
+    const {model:form, rules} = genFormAndRules(this.fieldCfgList);
+    return {
+      form,
+      rules
+    }
+  },
   methods: {
     search() {
-      this.$emit('search', {fieldsValue: this.$refs.ruleForm.getFieldsValue()});
+      const fieldsValue = this.$refs.ruleForm.getFieldsValue();
+      this.$emit('search', {fieldsValue});
     },
     reset() {
       this.$refs.ruleForm.resetFields();

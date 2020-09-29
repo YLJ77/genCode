@@ -1,12 +1,10 @@
-const fs = require('fs');
-const path = require('path');
+const {genServPage,genViewPage,genLessPage} = require("./index");
 
 module.exports.genPage = ({cfg}) => {
-    cfg = JSON.parse(cfg.pageCfg);
-    let data = `
-    ${cfg.headerTitle}
-    `;
-    fs.writeFile(path.join(__dirname, 'output.txt'), data, err => {
-        console.log(err);
+    return new Promise(async resolve => {
+        await genViewPage({cfg});
+        await genServPage({cfg});
+        await genLessPage({cfg});
+        resolve();
     })
 }

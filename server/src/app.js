@@ -1,3 +1,5 @@
+const {debugLog} = require('./util/appFunc');
+global.debugLog = debugLog;
 const express = require('express');
 const cors = require('cors');
 const pageRouter = require('./routers/page');
@@ -12,6 +14,7 @@ app.use(express.json());
 app.use(pageRouter);
 app.use(userRouter);
 
+
 app.listen(port, () => {
-    console.log(`Server is up on port ${port}.`);
+    debugLog({info:`Server is up on port ${port}.`, color:'green'});
 })
