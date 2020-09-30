@@ -1,5 +1,33 @@
 const chalk = require('chalk');
+const fs = require('fs');
 
+module.exports.delDirFiles = function delDirFiles(path) {
+    let files = [];
+    if(fs.existsSync(path)){
+        files = fs.readdirSync(path);
+        files.forEach((file, index) => {
+            let curPath = path + "/" + file;
+            if(fs.statSync(curPath).isDirectory()){
+                delDirFiles(curPath); //递归删除文件夹
+            } else {
+                fs.unlinkSync(curPath); //删除文件
+            }
+        });
+        // fs.rmdirSync(path);
+    }
+}
+
+module.exports.capitalToUnderscore = str => {
+    str = str.split('').reduce((acc,letter,index) => {
+        if (/^[A-Z]$/.test(letter) && index !== 0) {
+            acc += '_' + letter;
+        } else {
+            acc += letter;
+        }
+        return acc;
+    }, '');
+    return str.toLowerCase();
+}
 module.exports.debugLog = ({info, color='red'}) => {
     const isObj = typeof info === 'object';
     if (isObj) info = JSON.stringify(info);

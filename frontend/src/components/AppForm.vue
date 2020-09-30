@@ -2,12 +2,23 @@
   <div>
     <a-form ref="ruleForm" v-bind="formCfg" :model="form" :rules="rules" :layout="formCfg.layout || 'inline'">
       <div :class="{'search-bar': isSearchBar}">
-        <a-form-item v-for="(cfg, idx) in fieldCfgList" v-bind="cfg.formItem" :name="cfg.decorator[0]" :key="idx">
+        <a-form-item v-for="(cfg, idx) in fieldCfgList" v-bind="cfg.formItem || {}" :name="cfg?.decorator?.[0] || ''" :key="idx">
           <a-input v-if="cfg.type === 'input'"
              :type="cfg.inputType || 'text'"
              v-model:value="form[getDecoratorId(cfg)]"
              v-bind="cfg.field || {}"
-          />
+          >
+            <template v-slot:addonAfter>
+              <slot :name="cfg.decorator[0] + 'AddonAfter'" :props="{form,cfg}"></slot>
+            </template>
+            <template v-slot:addonBefore>
+              <slot :name="cfg.decorator[0] + 'AddonBefore'" :props="{form,cfg}"></slot>
+            </template>
+          </a-input>
+          <a-textarea v-else-if="cfg.type === 'textarea'"
+                   v-model:value="form[getDecoratorId(cfg)]"
+                   v-bind="cfg.field || {}"/>
+          <slot v-else-if="cfg.type === 'slot'" :name="cfg.slot" :props="{fieldsValue:form,cfg,getForm}"></slot>
         </a-form-item>
         <div v-if="isSearchBar">
           <a-button type="primary" @click="search">搜索</a-button>
@@ -19,7 +30,7 @@
       <a-button @click="cancel">取消</a-button>
       <a-button style="margin-left: 20px;" @click="ok" type="primary" :loading="saveBtnLoading">保存</a-button>
     </div>
-    <slot name="footer" :props="{getForm: () => this.$refs.ruleForm}"/>
+    <slot name="footer" :props="{getForm}"/>
   </div>
 </template>
 <style lang="scss" scoped>
@@ -79,6 +90,9 @@ export default {
     }
   },
   methods: {
+    getForm () {
+      return this.$refs.ruleForm;
+    },
     search() {
       const fieldsValue = this.$refs.ruleForm.getFieldsValue();
       this.$emit('search', {fieldsValue});

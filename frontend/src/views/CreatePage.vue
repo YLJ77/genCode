@@ -20,16 +20,20 @@
               ref="globalForm"
               :field-cfg-list="addModal.fieldList.global"
               :form-cfg="addModal.formCfg"
-              :footer-visible="false"
-          />
+              :footer-visible="false"/>
         </a-collapse-panel>
         <a-collapse-panel :forceRender="true" key="panelParam" header="panelParam">
           <app-form
               ref="panelForm"
               :field-cfg-list="addModal.fieldList.panel"
               :form-cfg="addModal.formCfg"
-              :footer-visible="false"
-          />
+              :footer-visible="false">
+            <template v-slot:analyse="{props:{fieldsValue,getForm,cfg}}">
+              <div style="position:relative;">
+                <a-button @click="analyse({fieldsValue,getForm,cfg})" style="position: absolute;top:-130px;right:-200px;">解析</a-button>
+              </div>
+            </template>
+          </app-form>
         </a-collapse-panel>
       </a-collapse>
       <div class="app-hc-vc" style="margin-top: 20px;">
@@ -62,7 +66,7 @@ export default {
       ],
       addModal: {
         visible: false,
-        activePanel: ['globalParam'],
+        activePanel: ['globalParam','panelParam'],
         title: '创建页面',
         fieldList: {
           global: [
@@ -77,6 +81,30 @@ export default {
               formItem: {
                 label: '文件名'
               },
+            },
+            {
+              type: 'input',
+              decorator: ['moduleName', {
+                initialValue: 'ClaimMgmt',
+                rules: [
+                  {required: true,message: '请输入模块名'}
+                ]
+              }],
+              formItem: {
+                label: '模块名'
+              },
+            },
+            {
+              type: 'input',
+              decorator: ['router', {
+                initialValue: 'AuthorizationMgmt/VinBlock',
+                rules: [
+                  {required: true,message: '请输入路径名'}
+                ]
+              }],
+              formItem: {
+                label: '语言包路径'
+              },
             }
           ],
           panel: [
@@ -87,6 +115,22 @@ export default {
                 label: '标题'
               },
             },
+            {
+              type: 'textarea',
+              decorator: ['fieldList',{initialValue:'提醒创建时间：提醒创建时间：是否OEM监控监控有效时间：监控规则：监控原因'}],
+              formItem: {
+                label: '表单列表'
+              },
+              field: {
+                allowClear: true,
+                autoSize: { minRows: 4 },
+                placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:'
+              }
+            },
+            {
+              type: 'slot',
+              slot: 'analyse'
+            }
           ]
         },
         saveBtnLoading: false,
@@ -125,17 +169,19 @@ export default {
     ...mapActions('createPage', [
       'addPage'
     ]),
+    analyse({fieldsValue,cfg,getForm}) {
+      fieldsValue.fieldList = fieldsValue.fieldList.split(/:|：/).reduce((acc,label,idx,arr) => {
+        acc += `label:${label}|id:____|type:String`;
+        if (idx !== arr.length - 1) acc += '|\n';
+        return acc;
+      }, '');
+    },
     save() {
-/*
-      const panelForm = this.$refs.panelForm.$refs.ruleForm;
-      panelForm.validate().then((fieldsValue) => {
-      })
-*/
       const {addModal: {fieldList}} = this;
       const pormises = Object.keys(fieldList).reduce((acc, key) => {
         const form = this.$refs[`${key}Form`].$refs.ruleForm;
         const promise = new Promise(resolve => {
-          form.validate().then(fieldsValue => resolve(fieldsValue));
+          form.validate().then(fieldsValue => resolve({[key]:fieldsValue}));
         })
         acc.push(promise);
         return acc;

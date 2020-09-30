@@ -3,7 +3,7 @@ const Page = require('../db/models/page');
 const router = new express.Router();
 const auth = require('../middleware/auth');
 const {formatOutput} = require('../util/appFunc');
-const {genPage} = require("../genCode/page/genPage")
+const {genPageFile} = require("../genCode/page/genPageFile")
 
 router.post('/page/add', auth, async (req,res) => {
     const page = new Page({
@@ -11,7 +11,7 @@ router.post('/page/add', auth, async (req,res) => {
             owner: req.user._id
         });
     try {
-        await genPage({cfg: req.body});
+        await genPageFile({cfg: req.body});
         // await page.save();
         res.status(201).send(formatOutput({data: page}));
     } catch (e) {

@@ -1,9 +1,11 @@
-const {genServPage} = require('./genServPage');
-const {genViewPage} = require('./genViewPage');
-const {genLessPage} = require('./genLessPage');
+const {genServeFile} = require('./genServFile');
+const {genViewFile} = require('./genViewFile');
+const {genLessFile} = require('./genLessFile');
+const {genTranslateFile} = require('./genTranslateFile');
 
 module.exports = {
-    genViewPage,
-    genServPage,
-    genLessPage
+    genViewFile,
+    genServeFile,
+    genLessFile,
+    genTranslateFile
 }
