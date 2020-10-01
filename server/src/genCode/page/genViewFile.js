@@ -6,12 +6,12 @@ const {capitalToUnderscore, upCase0, listToObj} = require('../../util/appFunc');
 module.exports.genViewFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
-        const {global,panel} = cfg;
+        const {global,panel,table} = cfg;
         let {fileName} = global;
         fileName = upCase0(fileName);  // 首字母大写
         const pageId = capitalToUnderscore(fileName[0].toLowerCase() + fileName.slice(1));  // 大写字母用下划线连接
-        const panelList = listToObj(panel.fieldList).reduce((acc, entry,idx,arr) => {
-            let {label,id,type} = entry
+        const panelList = panel.fieldList === '' ? '[]' : listToObj(panel.fieldList).reduce((acc, entry,idx,arr) => {
+            let {label,id,type,required} = entry
             type = upCase0(type);
             const placeholder = ['Select','Date'].includes(type) ? 'pleaseSelect': 'pleaseEnter';
             acc += `
@@ -21,13 +21,63 @@ module.exports.genViewFile = ({cfg}) => {
                     id: '${id}',
                     label: translate('${id}'),  // ${label}
                     placeholder: translate('${placeholder}'), // ${translate[placeholder]}
-                    rules: []
+                    rules: [ ${required === '1' ? '{required:true}' : ''} ]
                 }
             },
             `;
             if (idx === arr.length - 1) acc += ']';
             return acc;
         }, '[');
+        let columnsAttr = listToObj(table.columns);
+        const columns = columnsAttr.filter(entry => entry.title !== '序号')
+            .reduce((colAcc,entry,idx,arr) => {
+            let {title,dataIndex,emum,render,actionBtns} = entry;
+            colAcc += `
+            {
+                title: translate('${dataIndex}'),  // ${title}
+                dataIndex: '${dataIndex}',`;
+            if (title === '操作') {
+                actionBtns = actionBtns.split('/').reduce((acc,entry,idx,arr) => {
+                    const [type,text,key] = entry.split('-');
+                    acc += `{
+                        type: '${type}',
+                        text: translate('${key}'),  // ${text}
+                        onClick: row => {}
+                    },\n`
+                    if (idx === arr.length - 1) acc += '],'
+                    return acc;
+                }, '[\n')
+                colAcc += `
+                type: 'action',
+                fixed: 'right',
+                width: 100,
+                actionBtns: ${actionBtns}
+                `
+            }
+            // emum begin
+            if (emum !== '0') {
+                emum = emum.split('/').reduce((emumAcc,entry,idx,arr) => {
+                    const [val,label] = entry.split('-');
+                    emumAcc += `${val}: '${label}',`
+                    if (idx === arr.length - 1) {
+                        emumAcc += `}`;
+                    }
+                    return emumAcc;
+                }, '{');
+                colAcc += `\nemum: ${emum},`
+            }
+            // emum end
+            // render begin
+            if (render !== '0') {
+                colAcc += `\nrender: (text,record) => {
+                    return text;
+                },`
+            }
+            // render end
+            colAcc += `\n},`;
+            if (idx === arr.length - 1) colAcc += '\n]';
+            return colAcc;
+        }, '[')
         let data = `
 import React, {Component} from "react";
 import {YxListPage} from 'yx-widget'
@@ -78,7 +128,13 @@ class ${fileName}View extends Component {
           items: ${panelList}
       }
   }
-  tableParam() {}
+  tableParam() {
+      const {translate} = this;
+      let columns = ${columns};
+      return {
+          
+      }
+  }
   requestParam() {}
   render() {
     const params = {

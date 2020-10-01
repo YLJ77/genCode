@@ -29,11 +29,18 @@
               :form-cfg="addModal.formCfg"
               :footer-visible="false">
             <template v-slot:analyse="{props:{fieldsValue,getForm,cfg}}">
-              <div style="position:relative;">
-                <a-button @click="analyse({fieldsValue,getForm,cfg})" style="position: absolute;top:-130px;right:-200px;">解析</a-button>
+              <div class="slot-btn">
+                <a-button @click="analyse({fieldsValue,getForm,cfg})">解析</a-button>
               </div>
             </template>
           </app-form>
+        </a-collapse-panel>
+        <a-collapse-panel :forceRender="true" key="tableParam" header="tableParam">
+          <app-form
+              ref="tableForm"
+              :field-cfg-list="addModal.fieldList.table"
+              :form-cfg="addModal.formCfg"
+              :footer-visible="false"/>
         </a-collapse-panel>
       </a-collapse>
       <div class="app-hc-vc" style="margin-top: 20px;">
@@ -66,7 +73,7 @@ export default {
       ],
       addModal: {
         visible: true,
-        activePanel: ['globalParam','panelParam'],
+        activePanel: [/*'globalParam','panelParam',*/'tableParam'],
         title: '创建页面',
         fieldList: {
           global: [
@@ -117,7 +124,10 @@ export default {
             },
             {
               type: 'textarea',
-              decorator: ['fieldList',{initialValue:'提醒创建时间：提醒创建时间：是否OEM监控监控有效时间：监控规则：监控原因'}],
+              decorator: ['fieldList',{
+                // initialValue:'提醒创建时间：提醒创建时间：是否OEM监控监控有效时间：监控规则：监控原因'
+                initialValue:''
+              }],
               formItem: {
                 label: '表单列表'
               },
@@ -130,6 +140,37 @@ export default {
             {
               type: 'slot',
               slot: 'analyse'
+            }
+          ],
+          table: [
+            {
+              type: 'textarea',
+              decorator: ['columns',{initialValue:'序号:是否OEM监控:监控原因:监控规则:监控有效时间:备注:提醒创建人:提醒创建时间:操作'}],
+              formItem: {
+                label: '表格列名'
+              },
+              field: {
+                allowClear: true,
+                autoSize: { minRows: 4 },
+                placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:\nemum:\n0-否/1-是'
+              }
+            },
+            {
+              type: 'btn',
+              text: '解析',
+              action: ({fieldsValue}) => {
+                fieldsValue.columns = this.formatVal({
+                  fieldValue: fieldsValue.columns,
+                  accCtrl: ({entry:title,idx}) => {
+                    let attrs = `title:${title}\n|dataIndex:__tableIdx${idx}__\n|emum:0\n|render:0`
+                    if (title === '操作') {
+                      attrs += `\n|actionBtns:action-编辑-edit/action-删除-delete`;
+                      attrs = attrs.replace(`tableIdx${idx}`,'action');
+                    }
+                    return attrs;
+                  }
+                })
+              }
             }
           ]
         },
@@ -169,12 +210,23 @@ export default {
     ...mapActions('createPage', [
       'addPage'
     ]),
-    analyse({fieldsValue,cfg,getForm}) {
-      fieldsValue.fieldList = fieldsValue.fieldList.split(/:|：/).reduce((acc,label,idx,arr) => {
-        acc += `label:${label}|id:__panelId${idx}__|type:__String__`;
-        if (idx !== arr.length - 1) acc += ',\n';
+    formatVal({fieldValue, accCtrl, lines = 2 }) {
+      return fieldValue.split(/:|：/).reduce((acc,entry,idx,arr) => {
+        acc += accCtrl({acc,entry,idx,arr});
+        if (idx !== arr.length - 1) {
+          acc += ',';
+          acc += '\n'.repeat(lines);
+        }
         return acc;
       }, '');
+    },
+    analyse({fieldsValue}) {
+      fieldsValue.fieldList = this.formatVal({
+        fieldValue: fieldsValue.fieldList,
+        accCtrl: ({entry: label,idx}) => {
+          return `label:${label}\n|id:__panelId${idx}__\n|type:__String__\n|required:0`;
+        }
+      });
     },
     save() {
       const {addModal: {fieldList}} = this;

@@ -6,7 +6,7 @@ const {upCase0, listToObj} = require('../../util/appFunc');
 module.exports.genTranslateFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
-        const {global,panel} = cfg;
+        const {global,panel,table} = cfg;
         let {fileName} = global;
         fileName = upCase0(fileName);  // 首字母大写
         const panelListT = listToObj(panel.fieldList).reduce((acc, entry) => {
@@ -14,6 +14,19 @@ module.exports.genTranslateFile = ({cfg}) => {
             acc[id] = label;
             return acc;
         }, {});
+        const columnsT = listToObj(table.columns)
+            .filter(entry => entry.title !== '序号')
+            .reduce((acc, entry) => {
+                const {title,dataIndex,actionBtns} = entry;
+                acc[dataIndex] = title;
+                if (title === '操作') {
+                    actionBtns.split('/').forEach(entry => {
+                        const [,text,key] = entry.split('-');
+                        acc[key] = text;
+                    })
+                }
+                return acc;
+            }, {});
         const translate = {};
         ({
             panelTitle: translate.panelTitle,
@@ -24,6 +37,7 @@ module.exports.genTranslateFile = ({cfg}) => {
             "data": {
                 ...commonTranslate,
                 ...panelListT,
+                ...columnsT,
                 ...translate
             }
         }

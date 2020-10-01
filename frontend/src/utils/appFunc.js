@@ -19,7 +19,7 @@ export function updateState(state, list) {
 
 export const genFormAndRules = (cfgList) => {
     return cfgList.reduce((acc,cfg) => {
-        if (!['slot'].includes(cfg.type)) {
+        if (cfg.decorator) {
             const {decorator:[decoratorId, {rules,initialValue} = {rules:[]}]} = cfg;
             acc.model[decoratorId] = initialValue;
             acc.rules[decoratorId] = rules;

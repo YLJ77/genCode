@@ -18,7 +18,10 @@
           <a-textarea v-else-if="cfg.type === 'textarea'"
                    v-model:value="form[getDecoratorId(cfg)]"
                    v-bind="cfg.field || {}"/>
-          <slot v-else-if="cfg.type === 'slot'" :name="cfg.slot" :props="{fieldsValue:form,cfg,getForm}"></slot>
+          <slot v-else-if="cfg.type === 'slot'" :name="cfg.slot" :props="{fieldsValue:form,cfg,getForm}"/>
+          <div v-else-if="cfg.type === 'btn'" class="slot-btn">
+            <a-button @click="cfg.action({fieldsValue:form,getForm,cfg})">{{cfg.text}}</a-button>
+          </div>
         </a-form-item>
         <div v-if="isSearchBar">
           <a-button type="primary" @click="search">搜索</a-button>
@@ -38,6 +41,15 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+}
+.slot-btn {
+  position: relative;
+
+  button {
+    position: absolute;
+    top: -130px;
+    right: -200px;
+  }
 }
 </style>
 <script>
