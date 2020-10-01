@@ -1,18 +1,29 @@
 const fs = require('fs');
 const path = require('path');
+const commonTranslate = require('./translate.json');
+const {upCase0, listToObj} = require('../../util/appFunc');
 
 module.exports.genTranslateFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
         const {global,panel} = cfg;
         let {fileName} = global;
-        fileName = fileName[0].toUpperCase() + fileName.slice(1);  // 首字母大写
+        fileName = upCase0(fileName);  // 首字母大写
+        const panelListT = listToObj(panel.fieldList).reduce((acc, entry) => {
+            const {label,id} = entry;
+            acc[id] = label;
+            return acc;
+        }, {});
         const translate = {};
-        ({headerTitle: translate.headerTitle} = panel);
+        ({
+            panelTitle: translate.panelTitle,
+        } = panel);
         let data = {
             "resultCode": 0,
             "resultMsg": "",
             "data": {
+                ...commonTranslate,
+                ...panelListT,
                 ...translate
             }
         }

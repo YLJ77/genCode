@@ -1,14 +1,33 @@
 const fs = require('fs');
 const path = require('path');
-const {capitalToUnderscore} = require('../../util/appFunc');
+const translate = require('./translate.json');
+const {capitalToUnderscore, upCase0, listToObj} = require('../../util/appFunc');
 
 module.exports.genViewFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
         const {global,panel} = cfg;
         let {fileName} = global;
-        fileName = fileName[0].toUpperCase() + fileName.slice(1);  // 首字母大写
-        const pageId = capitalToUnderscore(fileName[0].toLowerCase() + fileName.slice(1));
+        fileName = upCase0(fileName);  // 首字母大写
+        const pageId = capitalToUnderscore(fileName[0].toLowerCase() + fileName.slice(1));  // 大写字母用下划线连接
+        const panelList = listToObj(panel.fieldList).reduce((acc, entry,idx,arr) => {
+            let {label,id,type} = entry
+            type = upCase0(type);
+            const placeholder = ['Select','Date'].includes(type) ? 'pleaseSelect': 'pleaseEnter';
+            acc += `
+            {
+                type: '${upCase0(type)}',
+                controlItemParam: {
+                    id: '${id}',
+                    label: translate('${id}'),  // ${label}
+                    placeholder: translate('${placeholder}'), // ${translate[placeholder]}
+                    rules: []
+                }
+            },
+            `;
+            if (idx === arr.length - 1) acc += ']';
+            return acc;
+        }, '[');
         let data = `
 import React, {Component} from "react";
 import {YxListPage} from 'yx-widget'
@@ -51,12 +70,12 @@ class ${fileName}View extends Component {
       const {translate} = this;
       return {
           containerParam: {
-            header: panel.headerTitle ? translate("headerTitle") : '', // ${panel.headerTitle}
+            header: translate("panelTitle"), // ${panel.panelTitle}
           },
           resetParam: {
               beforeClick: () => {}
           },
-          items: []
+          items: ${panelList}
       }
   }
   tableParam() {}
@@ -76,7 +95,6 @@ class ${fileName}View extends Component {
 }
 
     `;
-        debugLog({info: data})
         await fs.writeFile(path.join(__dirname, `../output/${fileName}View.js`), data, err => {
             reject(err);
         })

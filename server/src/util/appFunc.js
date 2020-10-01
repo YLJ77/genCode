@@ -1,6 +1,25 @@
 const chalk = require('chalk');
 const fs = require('fs');
 
+/**
+ * 将列表字符串转换为key-value对象数组
+ * @param list 列表字符串
+ * @returns {*[]}
+ */
+module.exports.listToObj = list => {
+    return list.replace(/_|\n/g,'').split(',').reduce((acc,entry,idx,arr) => {
+        const item = entry.split('|').reduce((attrs,entry) => {
+            const [key,val] = entry.split(':');
+            attrs[key] = val;
+            return attrs;
+        }, {});
+        acc.push(item);
+        return acc;
+    }, []);
+}
+
+module.exports.upCase0 = str => str[0].toUpperCase() + str.slice(1)
+
 module.exports.delDirFiles = function delDirFiles(path) {
     let files = [];
     if(fs.existsSync(path)){

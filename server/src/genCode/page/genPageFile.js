@@ -5,10 +5,10 @@ const path = require('path');
 module.exports.genPageFile = ({cfg}) => {
     return new Promise(async resolve => {
         delDirFiles(path.join(__dirname, '../output'));
-        await genViewFile({cfg});
+        await genTranslateFile({cfg});
         // await genServeFile({cfg});
         await genLessFile({cfg});
-        await genTranslateFile({cfg});
+        await genViewFile({cfg});
         resolve();
     })
 }

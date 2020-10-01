@@ -65,7 +65,7 @@ export default {
         },
       ],
       addModal: {
-        visible: false,
+        visible: true,
         activePanel: ['globalParam','panelParam'],
         title: '创建页面',
         fieldList: {
@@ -110,7 +110,7 @@ export default {
           panel: [
             {
               type: 'input',
-              decorator: ['headerTitle'],
+              decorator: ['panelTitle'],
               formItem: {
                 label: '标题'
               },
@@ -171,8 +171,8 @@ export default {
     ]),
     analyse({fieldsValue,cfg,getForm}) {
       fieldsValue.fieldList = fieldsValue.fieldList.split(/:|：/).reduce((acc,label,idx,arr) => {
-        acc += `label:${label}|id:____|type:String`;
-        if (idx !== arr.length - 1) acc += '|\n';
+        acc += `label:${label}|id:__panelId${idx}__|type:__String__`;
+        if (idx !== arr.length - 1) acc += ',\n';
         return acc;
       }, '');
     },
