@@ -27,6 +27,11 @@ module.exports.genTranslateFile = ({cfg}) => {
                 }
                 return acc;
             }, {});
+        const batchBtnsT = listToObj(table.batchBtns).reduce((acc,entry) => {
+            const {text,key} = entry;
+            acc[key] = text;
+            return acc;
+        },{})
         const translate = {};
         ({
             panelTitle: translate.panelTitle,
@@ -38,6 +43,7 @@ module.exports.genTranslateFile = ({cfg}) => {
                 ...commonTranslate,
                 ...panelListT,
                 ...columnsT,
+                ...batchBtnsT,
                 ...translate
             }
         }

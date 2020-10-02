@@ -33,7 +33,7 @@ module.exports.genViewFile = ({cfg}) => {
         table.isColumnNumber = columnsAttr.some(entry => entry.title === '序号');
         table.isNowrap = table.options.includes('isNowrap');
         table.isRowSelection = table.options.includes('isRowSelection');
-        const columns = columnsAttr.filter(entry => entry.title !== '序号')
+        const columns = table.columns === '' ? '[]' : columnsAttr.filter(entry => entry.title !== '序号')
             .reduce((colAcc,entry,idx,arr) => {
             let {title,dataIndex,emum,render,actionBtns} = entry;
             colAcc += `
@@ -82,8 +82,7 @@ module.exports.genViewFile = ({cfg}) => {
             if (idx === arr.length - 1) colAcc += '\n]';
             return colAcc;
         }, '[')
-        let data = `
-import React, {Component} from "react";
+        let data = `import React, {Component} from "react";
 import {YxListPage} from 'yx-widget'
 import {observer,inject} from 'mobx-react'
 import {withRouter} from "react-router-dom";
@@ -91,6 +90,17 @@ import {get} from "lodash";
 import CubeI8N from "utils/cubeI8N";
 import './${fileName}Less.less'
 import Serv from './${fileName}Serv'
+${
+    // 导入导出配置函数的引入
+    table.batchBtns === '' ? '' : listToObj(table.batchBtns)
+        .filter(entry => ['import','export'].includes(entry.key))
+        .reduce((acc,entry,idx,arr) => {
+            if (idx === 0) acc += 'import { ';
+            acc += `gen${upCase0(entry.key)}Cfg,`
+            if (idx === arr.length - 1) acc += ' } from "utils/apppFunc"'
+            return acc;
+    }, '')           
+}
 // 注入全局Store
 @inject("AppStore")
 // 在组件中可通过this.props.history.push跳转路由789
@@ -103,6 +113,7 @@ class ${fileName}View extends Component {
     this.translate = () => '';
     this.state = {
         version: 0,
+        queryParams: {},
         table: {
             selectedRows: [],
             selectedRowKeys: [],
@@ -138,6 +149,49 @@ class ${fileName}View extends Component {
           items: ${panelList}
       }
   }
+  batchBtns() {
+      const {translate} = this;
+      return ${
+            table.batchBtns === '' ? '[]' : listToObj(table.batchBtns).reduce((acc, entry,idx,arr) => {
+                const {actionType, type, text, key,url} = entry;
+                if (key === 'import') {
+                    acc += `{
+                        text: translate('${key}'),   // ${text}
+                        loading: this.state.importLoading,
+                        url: ${url}
+                    },
+                    `
+                } else if (key === 'export') {
+                    acc += `{
+                        text: translate('${key}'),   // ${text}
+                        loading: this.state.exportLoading,
+                        url: ${url},
+                        cb: loading => this.setState({exportLoading: loading}),
+                        getParams: () => {
+                            return {
+                                ...this.state.queryParams
+                            }
+                        }
+                    },
+                    `
+                } else {
+                    acc += `{
+                    actionType: ${actionType},
+                    type: ${type},
+                    check: false,
+                    text: translate('${key}'),   // ${text}
+                    onClick: () => {}
+                },
+                `
+                }
+                if (idx === arr.length - 1) acc += `]
+                `
+                return acc;
+            }, `[
+            `)
+        }
+  }
+  
   tableParam() {
       const {translate} = this;
       let columns = ${columns};
@@ -155,6 +209,7 @@ class ${fileName}View extends Component {
               },
             ` : '' 
         }
+        batchBtns: this.batchBtns()   
       }
   }
   requestParam() {}

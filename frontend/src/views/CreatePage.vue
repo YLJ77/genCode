@@ -128,7 +128,10 @@ export default {
           table: [
             {
               type: 'textarea',
-              decorator: ['columns',{initialValue:'序号:是否OEM监控:监控原因:监控规则:监控有效时间:备注:提醒创建人:提醒创建时间:操作'}],
+              decorator: ['columns',{
+                // initialValue:'序号:是否OEM监控:监控原因:监控规则:监控有效时间:备注:提醒创建人:提醒创建时间:操作'
+                initialValue:''
+              }],
               formItem: {
                 label: '表格列名'
               },
@@ -173,6 +176,44 @@ export default {
                   {label: '是否换行',value: 'isNowrap'},
                   {label: '是否显示复选框',value: 'isRowSelection'}
                 ]
+              }
+            },
+            {
+              type: 'textarea',
+              decorator: ['batchBtns',{initialValue:'新增:导入:导出'}],
+              formItem: {
+                label: '表格按钮'
+              },
+              field: {
+                allowClear: true,
+                autoSize: { minRows: 4 },
+                placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:'
+              }
+            },
+            {
+              type: 'btn',
+              text: '解析',
+              action: ({fieldsValue}) => {
+                fieldsValue.batchBtns = this.formatVal({
+                  fieldValue: fieldsValue.batchBtns,
+                  accCtrl: ({entry:text,idx}) => {
+                    let attrs = `text:${text}\n|key:__batchBtn${idx}__\n|actionType:action\n|type:primary`;
+                    const txtMapKey = {
+                      '新增': 'add',
+                      '导入': 'import',
+                      '导出': 'export',
+                    }
+                    if (['新增','导入','导出'].includes(text)) {
+                      if (['导入','导出'].includes(text)) {
+                        attrs += `\n|url:__url__`;
+                        attrs = attrs.replace('primary','secondary')
+                            .replace('|actionType:action\n','');
+                      }
+                      attrs = attrs.replace(`batchBtn${idx}`,txtMapKey[text]);
+                    }
+                    return attrs;
+                  }
+                })
               }
             },
           ]
