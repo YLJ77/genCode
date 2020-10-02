@@ -2,27 +2,31 @@
   <div>
     <a-form ref="ruleForm" v-bind="formCfg" :model="form" :rules="rules" :layout="formCfg.layout || 'inline'">
       <div :class="{'search-bar': isSearchBar}">
-        <a-form-item v-for="(cfg, idx) in fieldCfgList" v-bind="cfg.formItem || {}" :name="cfg?.decorator?.[0] || ''" :key="idx">
-          <a-input v-if="cfg.type === 'input'"
-             :type="cfg.inputType || 'text'"
-             v-model:value="form[getDecoratorId(cfg)]"
-             v-bind="cfg.field || {}"
-          >
-            <template v-slot:addonAfter>
-              <slot :name="cfg.decorator[0] + 'AddonAfter'" :props="{form,cfg}"></slot>
-            </template>
-            <template v-slot:addonBefore>
-              <slot :name="cfg.decorator[0] + 'AddonBefore'" :props="{form,cfg}"></slot>
-            </template>
-          </a-input>
-          <a-textarea v-else-if="cfg.type === 'textarea'"
-                   v-model:value="form[getDecoratorId(cfg)]"
-                   v-bind="cfg.field || {}"/>
-          <slot v-else-if="cfg.type === 'slot'" :name="cfg.slot" :props="{fieldsValue:form,cfg,getForm}"/>
+        <template v-for="(cfg, idx) in fieldCfgList">
+          <a-form-item v-if="cfg.decorator" v-bind="cfg.formItem || {}" :name="cfg?.decorator?.[0] || ''" :key="idx">
+            <a-input v-if="cfg.type === 'input'"
+                     :type="cfg.inputType || 'text'"
+                     v-model:value="form[getDecoratorId(cfg)]"
+                     v-bind="cfg.field || {}"
+            >
+              <template v-slot:addonAfter>
+                <slot :name="cfg.decorator[0] + 'AddonAfter'" :props="{form,cfg}"></slot>
+              </template>
+              <template v-slot:addonBefore>
+                <slot :name="cfg.decorator[0] + 'AddonBefore'" :props="{form,cfg}"></slot>
+              </template>
+            </a-input>
+            <a-textarea v-else-if="cfg.type === 'textarea'"
+                        v-model:value="form[getDecoratorId(cfg)]"
+                        v-bind="cfg.field || {}"/>
+            <a-checkbox-group v-else-if="cfg.type === 'checkbox'"
+                              v-model:value="form[getDecoratorId(cfg)]"
+                              v-bind="cfg.field || {}"/>
+          </a-form-item>
           <div v-else-if="cfg.type === 'btn'" class="slot-btn">
             <a-button @click="cfg.action({fieldsValue:form,getForm,cfg})">{{cfg.text}}</a-button>
           </div>
-        </a-form-item>
+        </template>
         <div v-if="isSearchBar">
           <a-button type="primary" @click="search">搜索</a-button>
           <a-button style="margin-left: 10px;" @click="reset">重置</a-button>
@@ -48,7 +52,7 @@
   button {
     position: absolute;
     top: -130px;
-    right: -200px;
+    right: 0;
   }
 }
 </style>

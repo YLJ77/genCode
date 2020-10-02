@@ -15,30 +15,10 @@
         :width="800"
     >
       <a-collapse v-model:activeKey="addModal.activePanel">
-        <a-collapse-panel :forceRender="true" key="globalParam" header="globalParam">
+        <a-collapse-panel v-for="section in ['global','panel','table']" :forceRender="true" :key="`${section}Param`" :header="`${section}Param`">
           <app-form
-              ref="globalForm"
-              :field-cfg-list="addModal.fieldList.global"
-              :form-cfg="addModal.formCfg"
-              :footer-visible="false"/>
-        </a-collapse-panel>
-        <a-collapse-panel :forceRender="true" key="panelParam" header="panelParam">
-          <app-form
-              ref="panelForm"
-              :field-cfg-list="addModal.fieldList.panel"
-              :form-cfg="addModal.formCfg"
-              :footer-visible="false">
-            <template v-slot:analyse="{props:{fieldsValue,getForm,cfg}}">
-              <div class="slot-btn">
-                <a-button @click="analyse({fieldsValue,getForm,cfg})">解析</a-button>
-              </div>
-            </template>
-          </app-form>
-        </a-collapse-panel>
-        <a-collapse-panel :forceRender="true" key="tableParam" header="tableParam">
-          <app-form
-              ref="tableForm"
-              :field-cfg-list="addModal.fieldList.table"
+              :ref="`${section}Form`"
+              :field-cfg-list="addModal.fieldList[section]"
               :form-cfg="addModal.formCfg"
               :footer-visible="false"/>
         </a-collapse-panel>
@@ -138,9 +118,12 @@ export default {
               }
             },
             {
-              type: 'slot',
-              slot: 'analyse'
-            }
+              type: 'btn',
+              text: '解析',
+              action: ({fieldsValue}) => {
+                this.analyse({fieldsValue});
+              }
+            },
           ],
           table: [
             {
@@ -171,7 +154,27 @@ export default {
                   }
                 })
               }
-            }
+            },
+            {
+              type: 'input',
+              decorator: ['rowKey', {initialValue: 'id'}],
+              formItem: {
+                label: 'rowKey'
+              },
+            },
+            {
+              type: 'checkbox',
+              decorator: ['options',{initialValue: []}],
+              formItem: {
+                label: '表格属性'
+              },
+              field: {
+                options: [
+                  {label: '是否换行',value: 'isNowrap'},
+                  {label: '是否显示复选框',value: 'isRowSelection'}
+                ]
+              }
+            },
           ]
         },
         saveBtnLoading: false,
@@ -248,7 +251,7 @@ export default {
             pageCfg: JSON.stringify(fieldsValue)
           }
         }).then(res => {
-          console.log(res);
+          this.$message.success('保存成功');
         })
       })
     },

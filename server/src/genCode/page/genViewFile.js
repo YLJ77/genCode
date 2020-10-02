@@ -28,7 +28,11 @@ module.exports.genViewFile = ({cfg}) => {
             if (idx === arr.length - 1) acc += ']';
             return acc;
         }, '[');
+
         let columnsAttr = listToObj(table.columns);
+        table.isColumnNumber = columnsAttr.some(entry => entry.title === '序号');
+        table.isNowrap = table.options.includes('isNowrap');
+        table.isRowSelection = table.options.includes('isRowSelection');
         const columns = columnsAttr.filter(entry => entry.title !== '序号')
             .reduce((colAcc,entry,idx,arr) => {
             let {title,dataIndex,emum,render,actionBtns} = entry;
@@ -98,6 +102,12 @@ class ${fileName}View extends Component {
     super(props, context);
     this.translate = () => '';
     this.state = {
+        version: 0,
+        table: {
+            selectedRows: [],
+            selectedRowKeys: [],
+            dataSource: []
+        }
     }
   }
   async componentDidMount () {
@@ -132,12 +142,25 @@ class ${fileName}View extends Component {
       const {translate} = this;
       let columns = ${columns};
       return {
-          
+          columns,
+          rowKey: '${table.rowKey}',
+          isNowrap: ${table.isNowrap ? 'true' : 'false'},  // 是否换行
+          isRowSelection: ${table.isRowSelection ? 'true' : 'false'},  // 是否显示复选框
+          isColumnNumber: ${table.isColumnNumber ? 'true' : 'false'},  // 是否开启序号
+          ${
+            table.isRowSelection ? `onCheckbox: (keys,rows) => {  // 复选框点击时触发的函数
+                this.state.table.selectedRows = rows;
+                this.state.table.selectedRowKeys = keys;
+                this.updateView();
+              },
+            ` : '' 
+        }
       }
   }
   requestParam() {}
   render() {
     const params = {
+      version: this.state.version,
       panelParam: this.panelParam(),
       tableParam: this.tableParam(),
       requestParam: this.requestParam(),
