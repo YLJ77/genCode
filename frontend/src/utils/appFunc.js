@@ -1,3 +1,7 @@
+export const upCase0 = str => {
+    return str[0].toUpperCase() + str.slice(1)
+}
+
 export function updateState(state, list) {
     function getTarget(target, key) {
         return target[key];

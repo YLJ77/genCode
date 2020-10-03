@@ -15,7 +15,7 @@
         :width="800"
     >
       <a-collapse v-model:activeKey="addModal.activePanel">
-        <a-collapse-panel v-for="section in ['global','panel','table','request']" :forceRender="true" :key="`${section}Param`" :header="`${section}Param`">
+        <a-collapse-panel v-for="(entry,section) in addModal.fieldList" :forceRender="true" :key="`${section}Param`" :header="`${section}Param`">
           <app-form
               :ref="`${section}Form`"
               :field-cfg-list="addModal.fieldList[section]"
@@ -35,6 +35,7 @@
 import AppForm from "@/components/AppForm";
 import AppTable from "@/components/AppTable";
 import {mapActions} from 'vuex'
+import {upCase0} from "@/utils/appFunc";
 
 export default {
   data() {
@@ -53,8 +54,11 @@ export default {
       ],
       addModal: {
         visible: true,
-        activePanel: [/*'globalParam','panelParam',*/'tableParam'],
+        activePanel: [/*'globalParam','panelParam','tableParam',*/ 'servParam'],
         title: '创建页面',
+        batchBtns: [],
+        importUrl: 'url',
+        exportUrl: 'url',
         fieldList: {
           global: [
             {
@@ -93,6 +97,44 @@ export default {
                 label: '语言包路径'
               },
             }
+          ],
+          serv: [
+            {
+              type: 'textarea',
+              decorator: ['servList',{
+                // initialValue:'POST\n' + '/v1/vinBlock/add\n' + '新增vinBlock\n' + 'POST\n' + '/v1/vinBlock/export\n' + 'vinBlock导出\n'
+                initialValue:''
+              }],
+              formItem: {
+                label: '接口列表'
+              },
+              field: {
+                allowClear: true,
+                autoSize: { minRows: 4 },
+                placeholder: '请求接口列表'
+              }
+            },
+            {
+              type: 'btn',
+              text: '解析',
+              action: ({fieldsValue}) => {
+                this.addModal.batchBtns = [];
+               fieldsValue.servList = fieldsValue.servList.split('\n').reduce((acc,entry,idx,arr) => {
+                  if (idx % 3 === 0) {
+                    const method = arr[idx];
+                    const url = arr[idx + 1];
+                    const comment = arr[idx + 2];
+                    acc.push({method,url,comment});
+                  }
+                  return acc;
+                }, []).reduce((acc,entry,idx,arr) => {
+                  const {method, url, comment} = entry
+                  acc += `method:${method.toUpperCase()}\n|url:${url}\n|name:${this.genMethodName({method,url})}\n|comment:${comment}\n|type:__${this.genMethodType({url})}__`;
+                  if (idx !== arr.length - 1) acc += ',\n\n'
+                  return acc;
+                }, '')
+              }
+            },
           ],
           panel: [
             {
@@ -208,7 +250,7 @@ export default {
                     }
                     if (['新增','导入','导出'].includes(text)) {
                       if (['导入','导出'].includes(text)) {
-                        attrs += `\n|url:__url__`;
+                        attrs += `\n|url:__${this.addModal[txtMapKey[text] + 'Url']}__`;
                         attrs = attrs.replace('primary','secondary')
                             .replace('|actionType:action\n','');
                       }
@@ -228,7 +270,7 @@ export default {
                 label: 'url'
               },
             },
-          ]
+          ],
         },
         saveBtnLoading: false,
         formCfg: {
@@ -266,6 +308,61 @@ export default {
     ...mapActions('createPage', [
       'addPage'
     ]),
+    genMethodName({method,url}) {
+      const urlInfoList = url.split('/');
+      const len = urlInfoList.length;
+      let last1,last2,name;
+      if (len > 2) {
+        last1 = urlInfoList[len - 1];
+        last2 = urlInfoList[len - 2];
+      } else if (len === 2) {
+        [last2,last1] = urlInfoList;
+      }
+      method = method.toUpperCase();
+      if (method === 'POST') {
+        name = last1 + upCase0(last2);
+        name = name.replace('queryByCondition', 'query')
+        .replace('modify','edit')
+      } else if (method === 'GET') {
+        name = 'get' + upCase0(last2);
+      } else if (method === 'DELETE') {
+        name = 'delete' + upCase0(last2);
+      } else {
+        name = 'methodName'
+      }
+      return name;
+    },
+    genMethodType({url}) {
+      const matches = url.match(/add|export|import|modify|queryByCondition$/ig);
+      const {batchBtns} = this.addModal;
+      let type = 'type';
+      const map = {
+        add: 'add',
+        export: 'export',
+        import: 'import',
+        modify: 'edit',
+        queryByCondition: 'query'
+      }
+      const batchBtnKeys = ['add','export','import'];
+      const typeMapTxt = {
+        add: '新增',
+        export: '导出',
+        import: '导入'
+      }
+      if (matches) {
+        type = map[matches[0]];
+        if (type === 'query') {
+          this.$refs.requestForm.form.url = url;
+        }
+        if (type === 'import') this.addModal.importUrl = url;
+        if (type === 'export') this.addModal.exportUrl = url;
+        if (batchBtnKeys.includes(type)) {
+          batchBtns.push(typeMapTxt[type]);
+        }
+      }
+      if (batchBtns.length) this.$refs.tableForm.form.batchBtns = batchBtns.join(':');
+      return type;
+    },
     formatVal({fieldValue, accCtrl, lines = 2 }) {
       return fieldValue.split(/:|：/).reduce((acc,entry,idx,arr) => {
         acc += accCtrl({acc,entry,idx,arr});

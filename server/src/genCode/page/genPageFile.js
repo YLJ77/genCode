@@ -6,7 +6,7 @@ module.exports.genPageFile = ({cfg}) => {
     return new Promise(async resolve => {
         delDirFiles(path.join(__dirname, '../output'));
         await genTranslateFile({cfg});
-        // await genServeFile({cfg});
+        await genServeFile({cfg});
         await genLessFile({cfg});
         await genViewFile({cfg});
         resolve();

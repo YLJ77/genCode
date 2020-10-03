@@ -1,18 +1,35 @@
 const fs = require('fs');
 const path = require('path');
+const {listToObj} = require('../../util/appFunc');
 
 module.exports.genServeFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
-        cfg.fileName = cfg.fileName[0].toUpperCase() + cfg.fileName.slice(1);  // 首字母大写
-        let data = `
-import request from 'utils/request';
+        const {global,serv} = cfg;
+        global.fileName = global.fileName[0].toUpperCase() + global.fileName.slice(1);  // 首字母大写
+        const {servList} = serv;
+        let data = `import request from 'utils/request';
 
 export default class {
-
+    ${
+       servList === '' ? '' : listToObj(servList).reduce((acc,entry,idx,arr) => {
+           const {method,url,comment,name} = entry;
+           console.log(entry);
+           acc += `// ${comment}
+           static ${name}(params) {
+             return request({
+               url: '${url}',
+               method: '${method}',
+               ${method === 'POST' ? 'data: params' : ''}
+             })
+           }
+           `;
+           return acc;
+       }, '')     
+    }
 }
     `;
-        await fs.writeFile(path.join(__dirname, `../output/${cfg.fileName}Serv.js`), data, err => {
+        await fs.writeFile(path.join(__dirname, `../output/${global.fileName}Serv.js`), data, err => {
             reject(err);
         })
         resolve();
