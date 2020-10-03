@@ -6,7 +6,7 @@ const {capitalToUnderscore, upCase0, listToObj} = require('../../util/appFunc');
 module.exports.genViewFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
-        const {global,panel,table} = cfg;
+        const {global,panel,table,request} = cfg;
         let {fileName} = global;
         fileName = upCase0(fileName);  // 首字母大写
         const pageId = capitalToUnderscore(fileName[0].toLowerCase() + fileName.slice(1));  // 大写字母用下划线连接
@@ -141,7 +141,9 @@ class ${fileName}View extends Component {
       const {translate} = this;
       return {
           containerParam: {
-            header: translate("panelTitle"), // ${panel.panelTitle}
+            ${
+                panel.panelTitle ? `header: translate("panelTitle"), // ${panel.panelTitle}` : ''
+            }  
           },
           resetParam: {
               beforeClick: () => {}
@@ -212,7 +214,20 @@ class ${fileName}View extends Component {
         batchBtns: this.batchBtns()   
       }
   }
-  requestParam() {}
+  requestParam() {
+      return {
+          method: 'post',
+          url: '${request.url}',
+          headers: { 'Content-type': 'application/json' },
+          beforeRequest: data => {
+            this.state.queryParams = data;
+            return data;
+          },
+          afterRequest: res => {
+            return res;
+          }
+      }
+  }
   render() {
     const params = {
       version: this.state.version,
@@ -228,6 +243,7 @@ class ${fileName}View extends Component {
   }
 }
 
+export default Form.create()(${fileName}View)
     `;
         await fs.writeFile(path.join(__dirname, `../output/${fileName}View.js`), data, err => {
             reject(err);

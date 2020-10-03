@@ -15,7 +15,7 @@
         :width="800"
     >
       <a-collapse v-model:activeKey="addModal.activePanel">
-        <a-collapse-panel v-for="section in ['global','panel','table']" :forceRender="true" :key="`${section}Param`" :header="`${section}Param`">
+        <a-collapse-panel v-for="section in ['global','panel','table','request']" :forceRender="true" :key="`${section}Param`" :header="`${section}Param`">
           <app-form
               :ref="`${section}Form`"
               :field-cfg-list="addModal.fieldList[section]"
@@ -180,7 +180,10 @@ export default {
             },
             {
               type: 'textarea',
-              decorator: ['batchBtns',{initialValue:'新增:导入:导出'}],
+              decorator: ['batchBtns',{
+                // initialValue:'新增:导入:导出'
+                initialValue:''
+              }],
               formItem: {
                 label: '表格按钮'
               },
@@ -215,6 +218,15 @@ export default {
                   }
                 })
               }
+            },
+          ],
+          request: [
+            {
+              type: 'input',
+              decorator: ['url', {initialValue: ''}],
+              formItem: {
+                label: 'url'
+              },
             },
           ]
         },
