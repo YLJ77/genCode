@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const {listToObj} = require('../../util/appFunc');
+const {listToObj,outputFile} = require('../../util/appFunc');
 
 module.exports.genServeFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
@@ -14,7 +14,6 @@ export default class {
     ${
        servList === '' ? '' : listToObj(servList).reduce((acc,entry,idx,arr) => {
            const {method,url,comment,name} = entry;
-           console.log(entry);
            acc += `// ${comment}
            static ${name}(params) {
              return request({
@@ -29,9 +28,7 @@ export default class {
     }
 }
     `;
-        await fs.writeFile(path.join(__dirname, `../output/${global.fileName}Serv.js`), data, err => {
-            reject(err);
-        })
-        resolve();
+        const err = await outputFile({fileName: `${global.fileName}Serv.js`, data});
+        resolve(err);
     })
 }

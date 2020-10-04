@@ -13,6 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(pageRouter);
 app.use(userRouter);
+app.use(express.static('public'))
 
 
 app.listen(port, () => {

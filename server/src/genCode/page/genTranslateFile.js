@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const commonTranslate = require('./translate.json');
-const {upCase0, listToObj} = require('../../util/appFunc');
+const {upCase0, listToObj,outputFile} = require('../../util/appFunc');
 
 module.exports.genTranslateFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
@@ -48,9 +48,7 @@ module.exports.genTranslateFile = ({cfg}) => {
             }
         }
         data = JSON.stringify(data);
-        await fs.writeFile(path.join(__dirname, `../output/${fileName}.json`), data, err => {
-            reject(err);
-        })
-        resolve();
+        const err = await outputFile({fileName: `${fileName}.json`, data});
+        resolve(err);
     })
 }

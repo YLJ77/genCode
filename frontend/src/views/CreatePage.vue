@@ -25,17 +25,35 @@
       </a-collapse>
       <div class="app-hc-vc" style="margin-top: 20px;">
         <a-button @click="addModal.visible=false">取消</a-button>
-        <a-button style="margin-left: 20px;" @click="save" type="primary" :loading="addModal.saveBtnLoading">保存</a-button>
+        <a-button class="ml20" @click="save" type="primary" :loading="addModal.genBtnLoading">生成文件</a-button>
+        <a-dropdown class="ml20">
+          <template v-slot:overlay>
+            <a-menu>
+              <a-menu-item v-for="extension in ['View.js','Serv.js','Less.less','.json','.zip']" key="1">
+                <a v-if="extension === '.zip'" :href="`http://127.0.0.1:3000/genFile/${$refs.globalForm.form.fileName + extension}`" target="_blank">{{$refs.globalForm.form.fileName + extension}}</a>
+                <a v-else :href="`http://127.0.0.1:3000/genFile/output/${$refs.globalForm.form.fileName + extension}`" target="_blank">{{$refs.globalForm.form.fileName + extension}}</a>
+              </a-menu-item>
+            </a-menu>
+          </template>
+          <a-button> 查看文件 <DownOutlined /> </a-button>
+        </a-dropdown>
       </div>
     </a-modal>
   </div>
 </template>
+
+<style lang="scss" scoped>
+.ml20 {
+  margin-left: 20px;
+}
+</style>
 
 <script>
 import AppForm from "@/components/AppForm";
 import AppTable from "@/components/AppTable";
 import {mapActions} from 'vuex'
 import {upCase0} from "@/utils/appFunc";
+import {DownOutlined} from '@ant-design/icons-vue'
 
 export default {
   data() {
@@ -272,7 +290,7 @@ export default {
             },
           ],
         },
-        saveBtnLoading: false,
+        genBtnLoading: false,
         formCfg: {
           labelCol: { span: 4 },
           wrapperCol: { span: 17 },
@@ -396,12 +414,12 @@ export default {
           return {...acc,...value};
         }, {})
         this.addPage({
-          cb: loading => this.addModal.saveBtnLoading = loading,
+          cb: loading => this.addModal.genBtnLoading = loading,
           params: {
             pageCfg: JSON.stringify(fieldsValue)
           }
         }).then(res => {
-          this.$message.success('保存成功');
+          this.$message.success('生成成功');
         })
       })
     },
@@ -414,7 +432,8 @@ export default {
   },
   components: {
     AppForm,
-    AppTable
+    AppTable,
+    DownOutlined
   }
 }
 </script>

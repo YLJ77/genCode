@@ -1,6 +1,8 @@
 const express = require('express');
 const Page = require('../db/models/page');
 const router = new express.Router();
+const path = require('path');
+const fs = require('fs');
 const auth = require('../middleware/auth');
 const {formatOutput} = require('../util/appFunc');
 const {genPageFile} = require("../genCode/page/genPageFile")
@@ -11,12 +13,21 @@ router.post('/page/add', auth, async (req,res) => {
             owner: req.user._id
         });
     try {
-        await genPageFile({cfg: req.body});
+        const err = await genPageFile({cfg: req.body});
         // await page.save();
-        res.status(201).send(formatOutput({data: page}));
+        if (err) {
+            res.status(500).send(formatOutput({data: err, code: -1}));
+        } else {
+            res.status(201).send(formatOutput({data: page, err}));
+        }
     } catch (e) {
         res.status(400).send(e);
     }
+});
+
+router.get('/page/download', auth, async (req,res) => {
+    // const filePath = path.join(__dirname, `../genCode/output/${req.body.fileName}`);
+    // res.download(filePath,req.query.fileName);
 });
 
 router.get('/page', auth, async (req,res) => {

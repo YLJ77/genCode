@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const translate = require('./translate.json');
-const {capitalToUnderscore, upCase0, listToObj} = require('../../util/appFunc');
+const {capitalToUnderscore, upCase0, listToObj,outputFile} = require('../../util/appFunc');
 
 module.exports.genViewFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
@@ -245,9 +245,7 @@ class ${fileName}View extends Component {
 
 export default Form.create()(${fileName}View)
     `;
-        await fs.writeFile(path.join(__dirname, `../output/${fileName}View.js`), data, err => {
-            reject(err);
-        })
-        resolve();
+        const err = await outputFile({fileName: `${fileName}View.js`, data});
+        resolve(err);
     })
 }

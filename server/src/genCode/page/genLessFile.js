@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const {capitalToUnderscore} = require('../../util/appFunc');
+const {capitalToUnderscore,outputFile} = require('../../util/appFunc');
 
 module.exports.genLessFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
@@ -11,9 +11,7 @@ module.exports.genLessFile = ({cfg}) => {
         const pageId = capitalToUnderscore(fileName[0].toLowerCase() + fileName.slice(1));
         let data = `#${pageId} {
         }`;
-        await fs.writeFile(path.join(__dirname, `../output/${fileName}Less.less`), data, err => {
-            reject(err);
-        })
-        resolve();
+        const err = await outputFile({fileName: `${fileName}Less.less`, data});
+        resolve(err);
     })
 }

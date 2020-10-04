@@ -45,9 +45,13 @@ export default class Request {
                      url,
                      method,
                      params = {},
-                     headers = getHeader(),
+                     headers = {},
                      cb = Function.prototype,
                  }) {
+        headers = {
+            ...headers,
+            ...getHeader()
+        }
         return new Promise((resolve) => {
             const requestInfo = {
                 url,
