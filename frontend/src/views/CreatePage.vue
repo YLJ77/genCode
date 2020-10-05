@@ -71,7 +71,7 @@ export default {
         },
       ],
       addModal: {
-        visible: true,
+        visible: false,
         activePanel: [/*'globalParam','panelParam','tableParam',*/ 'servParam'],
         title: '创建页面',
         batchBtns: [],
@@ -313,10 +313,45 @@ export default {
         topBtns: [
           {
             text: '新增',
-            type: 'primary',
-            action: () => {
-              this.addModal.visible = true;
+            evt: {
+              click: () => {
+                this.addModal.visible = true;
+              }
+            },
+            attr: {
+              type: 'primary',
             }
+          },
+          {
+            type: 'upload',
+            fileList: [],
+            attr: {
+              type: 'dashed',
+              loading: false,
+            },
+            upload: {
+              attr: {
+                // action: 'http://127.0.0.1:3000/page/upload'
+                showUploadList: false,
+                beforeUpload: (file,fileList) => {
+                  this.table.topBtns[1].fileList = fileList;
+                  return true;
+                },
+                customRequest: async () => {
+                  const {topBtns:[,{fileList:[file]}]} = this.table;
+                  const formData = new FormData();
+                  formData.append('file',file);
+                  await this.uploadFile({
+                    cb: loading => this.table.topBtns[1].attr.loading = loading,
+                    params: formData,
+                    headers: {
+                      'Content-Type': 'multipart/form-data'
+                    }
+                  });
+                  this.$message.success('上传成功');
+                },
+              }
+            },
           },
         ]
       }
@@ -324,7 +359,8 @@ export default {
   },
   methods: {
     ...mapActions('createPage', [
-      'addPage'
+      'addPage',
+      'uploadFile',
     ]),
     genMethodName({method,url}) {
       const urlInfoList = url.split('/');

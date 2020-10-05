@@ -3,6 +3,16 @@ const Page = require('../db/models/page');
 const router = new express.Router();
 const path = require('path');
 const fs = require('fs');
+const multer  = require('multer');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/upload/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + `_${file.originalname}`)
+    }
+})
+const upload = multer({storage});
 const auth = require('../middleware/auth');
 const {formatOutput} = require('../util/appFunc');
 const {genPageFile} = require("../genCode/page/genPageFile")
@@ -25,9 +35,9 @@ router.post('/page/add', auth, async (req,res) => {
     }
 });
 
-router.get('/page/download', auth, async (req,res) => {
-    // const filePath = path.join(__dirname, `../genCode/output/${req.body.fileName}`);
-    // res.download(filePath,req.query.fileName);
+router.post('/page/upload', auth,upload.single('file'), async (req,res) => {
+    debugLog({info: req.file});
+    res.status(200).send(formatOutput({data: req.file}));
 });
 
 router.get('/page', auth, async (req,res) => {
