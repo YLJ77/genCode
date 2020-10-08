@@ -1,3 +1,13 @@
+import chineseToPinyin from 'chinese-to-pinyin'
+
+export function toPinyin(chinese) {
+    return chineseToPinyin(chinese, {keepRest: true,removeTone: true}).split(/\s/)
+        .reduce((acc, str) => {
+            acc += upCase0(str);
+            return acc;
+        }, '');
+}
+
 export const upCase0 = str => {
     return str[0].toUpperCase() + str.slice(1)
 }

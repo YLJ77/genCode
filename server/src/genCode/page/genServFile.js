@@ -1,5 +1,3 @@
-const fs = require('fs');
-const path = require('path');
 const {listToObj,outputFile} = require('../../util/appFunc');
 
 module.exports.genServeFile = ({cfg}) => {

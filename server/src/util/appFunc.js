@@ -10,14 +10,20 @@ module.exports.outputFile = ({
     data
                              }) => {
     return new Promise((resolve,reject) => {
-        fs.mkdir(outputPath,{recursive: true}, async err => {
-            if (err) reject(err);
-            await fs.writeFile(`${outputPath}/${fileName}`, data, err => {
+        function wf() {
+            fs.writeFile(`${outputPath}/${fileName}`, data, err => {
                 if (err) reject(err);
                 resolve();
             })
-        })
-
+        }
+        if (fs.existsSync(outputPath)) {
+            wf();
+        } else {
+            fs.mkdir(outputPath,{recursive: true}, err => {
+                if (err) reject(err);
+                wf();
+            })
+        }
     })
 }
 
@@ -100,19 +106,23 @@ module.exports.listToObj = list => {
 
 module.exports.upCase0 = str => str[0].toUpperCase() + str.slice(1)
 
-module.exports.delDirFiles = function delDirFiles(path,isRecursive = false) {
+/**
+ * 删除指定路径下的文件，不删除目录
+  * @param path 要删除文件的路劲
+ */
+module.exports.delDirFiles = function delDirFiles(path) {
     let files = [];
     if(fs.existsSync(path)){
         files = fs.readdirSync(path);
         files.forEach((file, index) => {
             let curPath = path + "/" + file;
             if(fs.statSync(curPath).isDirectory()){
-                delDirFiles(curPath, true); //递归删除文件夹
+                delDirFiles(curPath); //递归删除文件夹
             } else {
                 fs.unlinkSync(curPath); //删除文件
             }
         });
-        isRecursive && fs.rmdirSync(path);
+        if (!fs.statSync(path).isDirectory())fs.rmdirSync(path);
     }
 }
 

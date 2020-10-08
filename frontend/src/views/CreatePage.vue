@@ -29,7 +29,7 @@
         <a-dropdown class="ml20">
           <template v-slot:overlay>
             <a-menu>
-              <a-menu-item v-for="extension in ['View.js','Serv.js','Less.less','.json','.zip']" key="1">
+              <a-menu-item v-for="extension in ['View.js','Serv.js','Less.less','Mod.js','.json','.zip']" key="1">
                 <a v-if="extension === '.zip'" :href="`http://127.0.0.1:3000/genFile/${$refs.globalForm.form.fileName + extension}`" target="_blank">{{$refs.globalForm.form.fileName + extension}}</a>
                 <a v-else :href="`http://127.0.0.1:3000/genFile/output/${$refs.globalForm.form.fileName + extension}`" target="_blank">{{$refs.globalForm.form.fileName + extension}}</a>
               </a-menu-item>
@@ -52,7 +52,7 @@
 import AppForm from "@/components/AppForm";
 import AppTable from "@/components/AppTable";
 import {mapActions} from 'vuex'
-import {upCase0} from "@/utils/appFunc";
+import {upCase0, toPinyin} from "@/utils/appFunc";
 import {DownOutlined} from '@ant-design/icons-vue'
 
 export default {
@@ -207,11 +207,12 @@ export default {
               action: ({fieldsValue}) => {
                 fieldsValue.columns = this.formatVal({
                   fieldValue: fieldsValue.columns,
-                  accCtrl: ({entry:title,idx}) => {
-                    let attrs = `title:${title}\n|dataIndex:__tableIdx${idx}__\n|emum:0\n|render:0`
+                  accCtrl: ({entry:title}) => {
+                    const titlePinyin = toPinyin(title);
+                    let attrs = `title:${title}\n|dataIndex:__tableIdx_${titlePinyin}__\n|emum:0\n|render:0`
                     if (title === '操作') {
                       attrs += `\n|actionBtns:action-编辑-edit/action-删除-delete`;
-                      attrs = attrs.replace(`tableIdx${idx}`,'action');
+                      attrs = attrs.replace(`tableIdx${titlePinyin}`,'action');
                     }
                     return attrs;
                   }
@@ -430,8 +431,9 @@ export default {
     analyse({fieldsValue}) {
       fieldsValue.fieldList = this.formatVal({
         fieldValue: fieldsValue.fieldList,
-        accCtrl: ({entry: label,idx}) => {
-          return `label:${label}\n|id:__panelId${idx}__\n|type:__String__\n|required:0`;
+        accCtrl: ({entry: label}) => {
+          const labelPinyin = toPinyin(label);
+          return `label:${label}\n|id:__panelId_${labelPinyin}__\n|type:__String__\n|required:0`;
         }
       });
     },

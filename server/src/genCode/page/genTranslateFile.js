@@ -1,5 +1,3 @@
-const fs = require('fs');
-const path = require('path');
 const commonTranslate = require('./translate.json');
 const {upCase0, listToObj,outputFile} = require('../../util/appFunc');
 

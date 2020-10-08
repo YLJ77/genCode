@@ -1,5 +1,3 @@
-const fs = require('fs');
-const path = require('path');
 const translate = require('./translate.json');
 const {capitalToUnderscore, upCase0, listToObj,outputFile} = require('../../util/appFunc');
 
@@ -21,7 +19,8 @@ module.exports.genViewFile = ({cfg}) => {
                     id: '${id}',
                     label: translate('${id}'),  // ${label}
                     placeholder: translate('${placeholder}'), // ${translate[placeholder]}
-                    rules: [ ${required === '1' ? '{required:true}' : ''} ]
+                    rules: [${required === '1' ? '{required:true}' : ''}],
+                    ${type === 'Select' ? 'data: []' : ''}
                 }
             },
             `;
@@ -84,6 +83,7 @@ module.exports.genViewFile = ({cfg}) => {
         }, '[')
         let data = `import React, {Component} from "react";
 import {YxListPage} from 'yx-widget'
+import {Form} from 'antd'
 import {observer,inject} from 'mobx-react'
 import {withRouter} from "react-router-dom";
 import {get} from "lodash";
@@ -103,16 +103,21 @@ ${
 }
 // 注入全局Store
 @inject("AppStore")
-// 在组件中可通过this.props.history.push跳转路由789
+// 在视图注入module层数据
+@inject("${fileName}Mod")
+// 在组件中可通过this.props.history.push跳转路由
 @withRouter
 // 将组件设置为响应式组件，成为观察者，以便响应被观察数据的变化
 @observer
 class ${fileName}View extends Component {
   constructor(props, context) {
     super(props, context);
+    this.appStore = this.props.AppStore;
+    this.store = this.props.${fileName}Mod;
     this.translate = () => '';
     this.state = {
         version: 0,
+        dict: {list: [],emum:[]},
         queryParams: {},
         table: {
             selectedRows: [],
@@ -129,9 +134,10 @@ class ${fileName}View extends Component {
       //我需要的语言包在模块中的路径
       router:"${global.router || (`${global.moduleName}/${fileName}`)}",
     });
-    //将函数实例化，并且保存这state中，为什么这样做
-    //因为这是一个异步函数， 我们可能要在render中使用
     this.translate = (new CubeI8N(data)).getString;
+    // 获取字典
+    this.appStore.getEnum('more','').then((res)=>{
+    this.setState({dict:res})});
     this.forceUpdate();
   }
   updateView(cb = () =>{}) {  // 更新页面视图
@@ -141,9 +147,7 @@ class ${fileName}View extends Component {
       const {translate} = this;
       return {
           containerParam: {
-            ${
-                panel.panelTitle ? `header: translate("panelTitle"), // ${panel.panelTitle}` : ''
-            }  
+            ${panel.panelTitle ? `header: translate("panelTitle"), // ${panel.panelTitle}` : ''}  
           },
           resetParam: {
               beforeClick: () => {}
@@ -178,8 +182,8 @@ class ${fileName}View extends Component {
                     `
                 } else {
                     acc += `{
-                    actionType: ${actionType},
-                    type: ${type},
+                    actionType: '${actionType}',
+                    type: '${type}',
                     check: false,
                     text: translate('${key}'),   // ${text}
                     onClick: () => {}

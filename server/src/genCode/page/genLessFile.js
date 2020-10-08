@@ -1,5 +1,3 @@
-const fs = require('fs');
-const path = require('path');
 const {capitalToUnderscore,outputFile} = require('../../util/appFunc');
 
 module.exports.genLessFile = ({cfg}) => {

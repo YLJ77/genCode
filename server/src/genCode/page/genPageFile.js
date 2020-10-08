@@ -1,4 +1,4 @@
-const {genServeFile,genViewFile,genLessFile,genTranslateFile} = require("./index");
+const {genServeFile,genViewFile,genLessFile,genTranslateFile,genModFile} = require("./index");
 const {delDirFiles, zipFile, upCase0} = require('../../util/appFunc');
 const path = require('path');
 
@@ -15,8 +15,9 @@ module.exports.genPageFile = ({cfg}) => {
         const serveErr = await genServeFile({cfg});
         const lessErr = await genLessFile({cfg});
         const viewErr = await genViewFile({cfg});
+        const modErr = await genModFile({cfg});
         zipFile({
-            onClose: () => resolve(translateErr || serveErr || lessErr || viewErr),
+            onClose: () => resolve(translateErr || serveErr || lessErr || viewErr || modErr),
             outputPath: outputPath + `/${fileName}.zip`,
             archiveDir: archivePath
         })
