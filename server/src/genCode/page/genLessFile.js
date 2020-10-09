@@ -10,6 +10,6 @@ module.exports.genLessFile = ({cfg}) => {
         let data = `#${pageId} {
         }`;
         const err = await outputFile({fileName: `${fileName}Less.less`, data});
-        resolve(err);
+        resolve({err,data});
     })
 }

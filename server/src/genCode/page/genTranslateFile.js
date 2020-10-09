@@ -29,6 +29,11 @@ module.exports.genTranslateFile = ({cfg}) => {
             const {text,key} = entry;
             acc[key] = text;
             return acc;
+        },{});
+        const tabListT = listToObj(global.tabList).reduce((acc,entry) => {
+            const {tab,key} = entry
+            acc[key] = tab;
+            return acc;
         },{})
         const translate = {};
         ({
@@ -42,11 +47,12 @@ module.exports.genTranslateFile = ({cfg}) => {
                 ...panelListT,
                 ...columnsT,
                 ...batchBtnsT,
+                ...tabListT,
                 ...translate
             }
         }
         data = JSON.stringify(data);
         const err = await outputFile({fileName: `${fileName}.json`, data});
-        resolve(err);
+        resolve({err,data});
     })
 }

@@ -7,7 +7,11 @@
     />
     <app-table style="margin-top:20px;"
                :top-btns="table.topBtns"
-               :cfg="table.cfg"></app-table>
+               :cfg="table.cfg">
+      <template v-slot:action="{props:{text,index,record}}">
+        <a-button :loading="table[`btnLoading${index}`]" @click="edit({text,index,record})" type="link">编辑</a-button>
+      </template>
+    </app-table>
     <a-modal
         v-model:visible="addModal.visible"
         :title="addModal.title"
@@ -25,7 +29,24 @@
       </a-collapse>
       <div class="app-hc-vc" style="margin-top: 20px;">
         <a-button @click="addModal.visible=false">取消</a-button>
-        <a-button class="ml20" @click="save" type="primary" :loading="addModal.genBtnLoading">生成文件</a-button>
+        <a-dropdown class="ml20">
+          <template v-slot:overlay>
+            <a-menu>
+              <a-menu-item>
+                  <a-button @click="save" type="link" :loading="addModal.genBtnLoading">生成文件</a-button>
+              </a-menu-item>
+              <a-menu-item>
+                <app-upload :cfg="{
+                  attr: {type: 'link'},
+                  upload:genUploadCfg({
+                    cb: loading => addModal.uploadBtnLoading = loading
+                  })
+                }"></app-upload>
+              </a-menu-item>
+            </a-menu>
+          </template>
+          <a-button> 操作 <DownOutlined /> </a-button>
+        </a-dropdown>
         <a-dropdown class="ml20">
           <template v-slot:overlay>
             <a-menu>
@@ -51,6 +72,7 @@
 <script>
 import AppForm from "@/components/AppForm";
 import AppTable from "@/components/AppTable";
+import AppUpload from "@/components/AppUpload";
 import {mapActions} from 'vuex'
 import {upCase0, toPinyin} from "@/utils/appFunc";
 import {DownOutlined} from '@ant-design/icons-vue'
@@ -58,6 +80,7 @@ import {DownOutlined} from '@ant-design/icons-vue'
 export default {
   data() {
     return {
+      fileList: [],
       searchFieldList: [
         {
           type: 'input',
@@ -72,11 +95,15 @@ export default {
       ],
       addModal: {
         visible: false,
-        activePanel: [/*'globalParam','panelParam','tableParam',*/ 'servParam'],
+        record: null,  // 编辑行数据
+        type: 'add', // add | edit
+        activePanel: ['globalParam'/*,'panelParam','tableParam', 'servParam'*/],
         title: '创建页面',
         batchBtns: [],
         importUrl: 'url',
         exportUrl: 'url',
+        genBtnLoading: false,
+        uploadBtnLoading: false,
         fieldList: {
           global: [
             {
@@ -114,7 +141,34 @@ export default {
               formItem: {
                 label: '语言包路径'
               },
-            }
+            },
+            {
+              type: 'textarea',
+              decorator: ['tabList',{
+                initialValue:''
+              }],
+              formItem: {
+                label: 'tab列表'
+              },
+              field: {
+                allowClear: true,
+                autoSize: { minRows: 4 },
+                placeholder: 'tab列表'
+              }
+            },
+            {
+              type: 'btn',
+              text: '解析',
+              action: ({fieldsValue}) => {
+                fieldsValue.tabList = this.splitColonToVal({
+                  fieldValue: fieldsValue.tabList,
+                  accCtrl: ({entry: tab}) => {
+                    const tabPinyin = toPinyin(tab);
+                    return `tab:${tab}\n|key:__tabKey_${tabPinyin}__`;
+                  }
+                });
+              }
+            },
           ],
           serv: [
             {
@@ -205,7 +259,7 @@ export default {
               type: 'btn',
               text: '解析',
               action: ({fieldsValue}) => {
-                fieldsValue.columns = this.formatVal({
+                fieldsValue.columns = this.splitColonToVal({
                   fieldValue: fieldsValue.columns,
                   accCtrl: ({entry:title}) => {
                     const titlePinyin = toPinyin(title);
@@ -258,7 +312,7 @@ export default {
               type: 'btn',
               text: '解析',
               action: ({fieldsValue}) => {
-                fieldsValue.batchBtns = this.formatVal({
+                fieldsValue.batchBtns = this.splitColonToVal({
                   fieldValue: fieldsValue.batchBtns,
                   accCtrl: ({entry:text,idx}) => {
                     let attrs = `text:${text}\n|key:__batchBtn${idx}__\n|actionType:action\n|type:primary`;
@@ -291,7 +345,6 @@ export default {
             },
           ],
         },
-        genBtnLoading: false,
         formCfg: {
           labelCol: { span: 4 },
           wrapperCol: { span: 17 },
@@ -306,9 +359,43 @@ export default {
           dataSource: [],
           columns: [
             {
-              dataIndex: '_id',
-              title: 'id',
+              dataIndex: 'fileName',
+              title: '文件名',
             },
+            {
+              dataIndex: 'moduleName',
+              title: '模块名',
+            },
+            {
+              dataIndex: 'router',
+              title: '语言包路径',
+            },
+            {
+              dataIndex: 'view',
+              title: 'view',
+            },
+            {
+              dataIndex: 'serv',
+              title: 'serv',
+            },
+            {
+              dataIndex: 'translate',
+              title: 'translate',
+            },
+            {
+              dataIndex: 'less',
+              title: 'less',
+            },
+            {
+              dataIndex: 'mod',
+              title: 'mod',
+            },
+            {
+              dataIndex: 'action',
+              title: '操作',
+              fixed: 'right',
+              slots: { customRender: 'action' },
+            }
           ]
         },
         topBtns: [
@@ -316,6 +403,7 @@ export default {
             text: '新增',
             evt: {
               click: () => {
+                this.addModal.type = 'add';
                 this.addModal.visible = true;
               }
             },
@@ -330,29 +418,9 @@ export default {
               type: 'dashed',
               loading: false,
             },
-            upload: {
-              attr: {
-                // action: 'http://127.0.0.1:3000/page/upload'
-                showUploadList: false,
-                beforeUpload: (file,fileList) => {
-                  this.table.topBtns[1].fileList = fileList;
-                  return true;
-                },
-                customRequest: async () => {
-                  const {topBtns:[,{fileList:[file]}]} = this.table;
-                  const formData = new FormData();
-                  formData.append('file',file);
-                  await this.uploadFile({
-                    cb: loading => this.table.topBtns[1].attr.loading = loading,
-                    params: formData,
-                    headers: {
-                      'Content-Type': 'multipart/form-data'
-                    }
-                  });
-                  this.$message.success('上传成功');
-                },
-              }
-            },
+            upload: this.genUploadCfg({
+              cb: loading => this.table.topBtns[1].attr.loading = loading
+            }),
           },
         ]
       }
@@ -361,8 +429,53 @@ export default {
   methods: {
     ...mapActions('createPage', [
       'addPage',
+      'editPage',
+      'getPageList',
+      'getPage',
       'uploadFile',
     ]),
+    genUploadCfg({fieldName = 'file',cb = () =>{} } = {}) {
+      return {
+        attr: {
+          // action: 'http://127.0.0.1:3000/page/upload'
+          showUploadList: false,
+          beforeUpload: (file,fileList) => {
+            this.fileList = fileList;
+            return true;
+          },
+          customRequest: async () => {
+            const formData = new FormData();
+            this.fileList.forEach((file,idx) => {
+              formData.append(fieldName,file);
+            })
+            await this.uploadFile({
+              cb,
+              params: formData,
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            });
+            this.$message.success('上传成功');
+          },
+        }
+      }
+    },
+    edit({record,index}) {
+      this.getPage({
+        cb: loading => this.table[`btnLoading${index}`] = loading,
+        params: {
+          id: record.id
+        }
+      }).then(res => {
+        const cfg = JSON.parse(res.data.pageCfg);
+        this.addModal.visible = true;
+        this.addModal.type = 'edit';
+        this.addModal.record = record;
+        this.$nextTick(() => {
+          this.setFormsValue({cfg});
+        });
+      });
+    },
     genMethodName({method,url}) {
       const urlInfoList = url.split('/');
       const len = urlInfoList.length;
@@ -389,7 +502,7 @@ export default {
     },
     genMethodType({url}) {
       const matches = url.match(/add|export|import|modify|queryByCondition$/ig);
-      const {batchBtns} = this.addModal;
+      const {batchBtns,importUrl,exportUrl} = this.addModal;
       let type = 'type';
       const map = {
         add: 'add',
@@ -404,21 +517,24 @@ export default {
         export: '导出',
         import: '导入'
       }
+      const {} = addModal;
       if (matches) {
         type = map[matches[0]];
-        if (type === 'query') {
+        const {requestForm} = this.$refs;
+        if (type === 'query' && !requestForm.form.url) {
           this.$refs.requestForm.form.url = url;
         }
-        if (type === 'import') this.addModal.importUrl = url;
-        if (type === 'export') this.addModal.exportUrl = url;
+        if (type === 'import' && !importUrl) this.addModal.importUrl = url;
+        if (type === 'export' && !exportUrl) this.addModal.exportUrl = url;
         if (batchBtnKeys.includes(type)) {
           batchBtns.push(typeMapTxt[type]);
         }
       }
-      if (batchBtns.length) this.$refs.tableForm.form.batchBtns = batchBtns.join(':');
+      const {tableForm} = this.$refs;
+      if (batchBtns.length && !tableForm.form.batchBtns) this.$refs.tableForm.form.batchBtns = batchBtns.join(':');
       return type;
     },
-    formatVal({fieldValue, accCtrl, lines = 2 }) {
+    splitColonToVal({fieldValue, accCtrl, lines = 2}) {
       return fieldValue.split(/:|：/).reduce((acc,entry,idx,arr) => {
         acc += accCtrl({acc,entry,idx,arr});
         if (idx !== arr.length - 1) {
@@ -429,7 +545,7 @@ export default {
       }, '');
     },
     analyse({fieldsValue}) {
-      fieldsValue.fieldList = this.formatVal({
+      fieldsValue.fieldList = this.splitColonToVal({
         fieldValue: fieldsValue.fieldList,
         accCtrl: ({entry: label}) => {
           const labelPinyin = toPinyin(label);
@@ -437,8 +553,18 @@ export default {
         }
       });
     },
-    save() {
+    setFieldsValue({fieldsValue,form}) {
+      Object.keys(fieldsValue).forEach(key => form[key] = fieldsValue[key]);
+    },
+    setFormsValue({cfg}) {
       const {addModal: {fieldList}} = this;
+      Object.keys(fieldList).forEach(key => {
+        const form = this.$refs[`${key}Form`].form;
+        this.setFieldsValue({fieldsValue: cfg[key],form});
+      });
+    },
+    save() {
+      const {addModal: {fieldList, type, record}} = this;
       const pormises = Object.keys(fieldList).reduce((acc, key) => {
         const form = this.$refs[`${key}Form`].$refs.ruleForm;
         const promise = new Promise(resolve => {
@@ -450,19 +576,38 @@ export default {
       Promise.all(pormises).then(values => {
         const fieldsValue = values.reduce((acc, value) => {
           return {...acc,...value};
-        }, {})
-        this.addPage({
+        }, {});
+        const params = {
+          pageCfg: JSON.stringify(fieldsValue)
+        }
+        if (type === 'edit') params.id = record.id;
+        this[`${type}Page`]({
           cb: loading => this.addModal.genBtnLoading = loading,
-          params: {
-            pageCfg: JSON.stringify(fieldsValue)
-          }
-        }).then(res => {
+          params
+        }).then(() => {
           this.$message.success('生成成功');
+          this.getList();
         })
       })
     },
     getList({fieldsValue = {}} = {}) {
-
+      const {table: {cfg}} = this;
+      this.getPageList({
+        cb: loading => cfg.loading = loading,
+        params: {
+          curPage: 1,
+          pageSize: 10
+        }
+      }).then(res => {
+        res.data.list = res.data.list.map(entry => {
+          const {fileName,moduleName,router} = (JSON.parse(entry.pageCfg)).global;
+          entry.fileName = fileName;
+          entry.moduleName = moduleName;
+          entry.router = router;
+          return entry;
+        });
+        cfg.dataSource = res.data.list;
+      });
     },
   },
   created() {
@@ -471,6 +616,7 @@ export default {
   components: {
     AppForm,
     AppTable,
+    AppUpload,
     DownOutlined
   }
 }

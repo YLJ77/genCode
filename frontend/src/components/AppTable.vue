@@ -1,38 +1,45 @@
 <template>
-  <div>
+  <div id="app-table">
     <div class="top-btns app-he">
       <template v-for="btn in topBtns">
         <a-button v-if="(btn.type || 'btn') === 'btn'"
             v-on="btn.evt || {}"
             v-bind="btn.attr || {}"
             class="ml20">{{btn.text}}</a-button>
-        <a-upload v-else-if="btn.type === 'upload'"
-            v-on="btn.upload.evt || {}"
-            v-bind="btn.upload.attr || {}"
-            class="ml20"
-            v-model:fileList="btn.upload.fileList"
-            name="file"
-            :multiple="true"
-            :headers="headers"
-        >
-          <a-button v-on="btn.evt || {}" v-bind="btn.attr || {}"
-          ><upload-outlined />{{btn.text || '上传'}}</a-button>
-        </a-upload>
+        <app-upload v-else-if="btn.type === 'upload'"
+                    :cfg="btn"
+        ></app-upload>
       </template>
     </div>
-    <a-table v-bind="cfg"></a-table>
+    <a-table v-bind="cfg" :scroll="{x:true}">
+      <template v-for="slot in slots" v-slot:[slot]="{ text, index, record }">
+        <slot :name="slot" :props="{text,index,record}"></slot>
+      </template>
+    </a-table>
   </div>
 </template>
 <style lang="scss" scoped>
-.top-btns {
-  margin-bottom: 20px;
-}
-.ml20 {
-  margin-left: 20px;
+#app-table {
+  width: 80vw;
+  .top-btns {
+    margin-bottom: 20px;
+  }
+  .ml20 {
+    margin-left: 20px;
+  }
+  :deep {
+    td {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      overflow: hidden;
+    }
+  }
 }
 </style>
 <script>
-import {UploadOutlined} from '@ant-design/icons-vue'
+import AppUpload from "@/components/AppUpload";
+
 export default {
   props: {
     topBtns: {
@@ -44,15 +51,14 @@ export default {
       required: true
     }
   },
-  data() {
-    return {
-      headers: {
-        authorization: localStorage.getItem('token')
-      }
+  computed: {
+    slots() {
+      return this.cfg.columns.filter(column => column.slots)
+      .map(column => column.slots.customRender)
     }
   },
   components: {
-    UploadOutlined
+    AppUpload
   }
 }
 </script>

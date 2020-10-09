@@ -27,6 +27,6 @@ export default class {
 }
     `;
         const err = await outputFile({fileName: `${global.fileName}Serv.js`, data});
-        resolve(err);
+        resolve({err,data});
     })
 }

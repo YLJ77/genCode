@@ -11,13 +11,15 @@ module.exports.genPageFile = ({cfg}) => {
         let {fileName} = global;
         fileName = upCase0(fileName);  // 首字母大写
         delDirFiles(outputPath);
-        const translateErr = await genTranslateFile({cfg});
-        const serveErr = await genServeFile({cfg});
-        const lessErr = await genLessFile({cfg});
-        const viewErr = await genViewFile({cfg});
-        const modErr = await genModFile({cfg});
+        const {data:translate, err: translateErr} = await genTranslateFile({cfg});
+        const {data:serv, err: serveErr} = await genServeFile({cfg});
+        const {data:less, err: lessErr} = await genLessFile({cfg});
+        const {data:view, err: viewErr} = await genViewFile({cfg});
+        const {data:mod, err: modErr} = await genModFile({cfg});
+        const err = translateErr || serveErr || lessErr || viewErr || modErr;
+        const data = {translate,serv,less,view,mod, err};
         zipFile({
-            onClose: () => resolve(translateErr || serveErr || lessErr || viewErr || modErr),
+            onClose: () => resolve(data),
             outputPath: outputPath + `/${fileName}.zip`,
             archiveDir: archivePath
         })

@@ -10,6 +10,31 @@ const pageSchema = new mongoose.Schema({
         default: 'page'
 */
     },
+    translate: {  // translate文件内容
+        type: String,
+        trim: true,
+        default: ''
+    },
+    serv: {  // serve文件内容
+        type: String,
+        trim: true,
+        default: ''
+    },
+    less: {  // less文件内容
+        type: String,
+        trim: true,
+        default: ''
+    },
+    view: {  // view文件内容
+        type: String,
+        trim: true,
+        default: ''
+    },
+    mod: {  // mod文件内容
+        type: String,
+        trim: true,
+        default: ''
+    },
     owner: {
         type: mongoose.Schema.Types.ObjectID,
         required: true,

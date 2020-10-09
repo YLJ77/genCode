@@ -17,6 +17,6 @@ const mod = new ${fileName}();
 export default mod;
         `;
         const err = await outputFile({fileName: `${fileName}.js`, data});
-        resolve(err);
+        resolve({err,data});
     })
 }

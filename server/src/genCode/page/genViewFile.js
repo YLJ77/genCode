@@ -83,13 +83,14 @@ module.exports.genViewFile = ({cfg}) => {
         }, '[')
         let data = `import React, {Component} from "react";
 import {YxListPage} from 'yx-widget'
-import {Form} from 'antd'
+import {Form${global.tabList && ',Tabs'}} from 'antd'
 import {observer,inject} from 'mobx-react'
 import {withRouter} from "react-router-dom";
 import {get} from "lodash";
 import CubeI8N from "utils/cubeI8N";
 import './${fileName}Less.less'
 import Serv from './${fileName}Serv'
+${global.tabList && 'const {TabPane} = Tabs'}
 ${
     // 导入导出配置函数的引入
     table.batchBtns === '' ? '' : listToObj(table.batchBtns)
@@ -232,7 +233,11 @@ class ${fileName}View extends Component {
           }
       }
   }
+  ${
+     global.tabList && `onTabChange(val) {}`           
+   }
   render() {
+    const {translate} = this;
     const params = {
       version: this.state.version,
       panelParam: this.panelParam(),
@@ -242,6 +247,25 @@ class ${fileName}View extends Component {
       formChange: (ids, changeValue, values) => {},
     }
     return <div id="${pageId}">
+      ${
+            // tabList-begin
+            global.tabList && listToObj(global.tabList).reduce((acc,entry,idx,arr) => {
+                const {tab,key} = entry
+                if (idx === 0) {
+                    acc += `<Tabs defaultActiveKey="${key}" onChange={(val) => this.onTabChange(val)}>
+`;
+                }
+                acc += `{/* ${tab} */}
+<TabPane tab={translate('${key}')} key="${key}"/>
+`;
+                if (idx === arr.length - 1) {
+                    acc += '</Tabs>';
+                }
+                return acc;
+            }, '')
+            
+            // tabList-end
+        }
       <YxListPage {...params}/>
     </div>
   }
@@ -250,6 +274,6 @@ class ${fileName}View extends Component {
 export default Form.create()(${fileName}View)
     `;
         const err = await outputFile({fileName: `${fileName}View.js`, data});
-        resolve(err);
+        resolve({err,data});
     })
 }
