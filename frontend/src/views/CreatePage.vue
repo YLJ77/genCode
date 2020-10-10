@@ -9,7 +9,7 @@
                :top-btns="table.topBtns"
                :cfg="table.cfg">
       <template v-slot:action="{props:{text,index,record}}">
-        <a-button :loading="table[`btnLoading${index}`]" @click="edit({text,index,record})" type="link">编辑</a-button>
+        <a-button :loading="table[`btnLoading${index}`]" @click="visiblePageInfo({text,index,record})" type="link">编辑</a-button>
       </template>
     </app-table>
     <a-modal
@@ -33,30 +33,30 @@
           <template v-slot:overlay>
             <a-menu>
               <a-menu-item>
-                  <a-button @click="save" type="link" :loading="addModal.genBtnLoading">生成文件</a-button>
+                  <a-button @click="save" type="link" :loading="addModal.genBtnLoading">保存</a-button>
               </a-menu-item>
               <a-menu-item>
                 <app-upload :cfg="{
-                  attr: {type: 'link'},
-                  upload:genUploadCfg({
-                    cb: loading => addModal.uploadBtnLoading = loading
-                  })
+                  text: '字段替换',
+                  attr: {type: 'link',},
+                  upload: addModal.replaceFieldCfg
                 }"></app-upload>
               </a-menu-item>
             </a-menu>
           </template>
-          <a-button> 操作 <DownOutlined /> </a-button>
+          <a-button>操作<DownOutlined /></a-button>
         </a-dropdown>
         <a-dropdown class="ml20">
           <template v-slot:overlay>
             <a-menu>
-              <a-menu-item v-for="extension in ['View.js','Serv.js','Less.less','Mod.js','.json','.zip']" key="1">
+              <a-menu-item v-for="extension in ['View.js','Serv.js','Less.less','Mod.js','.json','.zip']" :key="extension">
                 <a v-if="extension === '.zip'" :href="`http://127.0.0.1:3000/genFile/${$refs.globalForm.form.fileName + extension}`" target="_blank">{{$refs.globalForm.form.fileName + extension}}</a>
                 <a v-else :href="`http://127.0.0.1:3000/genFile/output/${$refs.globalForm.form.fileName + extension}`" target="_blank">{{$refs.globalForm.form.fileName + extension}}</a>
               </a-menu-item>
+              <a-menu-item>foo</a-menu-item>
             </a-menu>
           </template>
-          <a-button> 查看文件 <DownOutlined /> </a-button>
+          <a-button>查看文件<DownOutlined /></a-button>
         </a-dropdown>
       </div>
     </a-modal>
@@ -95,6 +95,15 @@ export default {
       ],
       addModal: {
         visible: false,
+        replaceFieldCfg: this.genUploadCfg({
+              requestMethod: 'replacePageField',
+              cb: loading => this.addModal.uploadBtnLoading = loading,
+              msg: '替换',
+              appendFormData: async formData => {
+                const fieldsValue = await this.getFieldsValue();
+                formData.append('pageCfg',JSON.stringify(fieldsValue));
+              }
+            }),
         record: null,  // 编辑行数据
         type: 'add', // add | edit
         activePanel: ['globalParam'/*,'panelParam','tableParam', 'servParam'*/],
@@ -431,37 +440,52 @@ export default {
       'addPage',
       'editPage',
       'getPageList',
-      'getPage',
+      'getPageInfo',
       'uploadFile',
+      'replacePageField'
     ]),
-    genUploadCfg({fieldName = 'file',cb = () =>{} } = {}) {
+    genUploadCfg({
+                   fieldName = 'file',
+                   cb = () =>{},
+                   msg = '上传',
+                   appendFormData,
+                   requestMethod = 'uploadFile'
+    } = {}) {
+      let counter = 0;
       return {
         attr: {
           // action: 'http://127.0.0.1:3000/page/upload'
           showUploadList: false,
-          beforeUpload: (file,fileList) => {
-            this.fileList = fileList;
-            return true;
+          beforeUpload: (file,fileList) => {  // 上传多少个文件就会被调用多少次，返回true则请求接口上传，只在第一次调用的时候请求接口上传
+            counter += 1;
+            if (counter === 1) {
+              this.fileList = fileList;
+              if (counter === fileList.length)  counter = 0;
+              return true;
+            }
+            if (counter === fileList.length)  counter = 0;
+            return false;
           },
           customRequest: async () => {
             const formData = new FormData();
-            this.fileList.forEach((file,idx) => {
+            this.fileList.forEach(file => {
               formData.append(fieldName,file);
-            })
-            await this.uploadFile({
+            });
+            if (appendFormData) await appendFormData(formData);
+            await this[requestMethod]({
               cb,
               params: formData,
               headers: {
                 'Content-Type': 'multipart/form-data'
               }
             });
-            this.$message.success('上传成功');
+            this.$message.success(`${msg}成功`);
           },
         }
       }
     },
-    edit({record,index}) {
-      this.getPage({
+    visiblePageInfo({record,index}) {
+      this.getPageInfo({
         cb: loading => this.table[`btnLoading${index}`] = loading,
         params: {
           id: record.id
@@ -563,31 +587,38 @@ export default {
         this.setFieldsValue({fieldsValue: cfg[key],form});
       });
     },
-    save() {
-      const {addModal: {fieldList, type, record}} = this;
-      const pormises = Object.keys(fieldList).reduce((acc, key) => {
-        const form = this.$refs[`${key}Form`].$refs.ruleForm;
-        const promise = new Promise(resolve => {
-          form.validate().then(fieldsValue => resolve({[key]:fieldsValue}));
-        })
-        acc.push(promise);
-        return acc;
-      }, []);
-      Promise.all(pormises).then(values => {
-        const fieldsValue = values.reduce((acc, value) => {
-          return {...acc,...value};
-        }, {});
-        const params = {
-          pageCfg: JSON.stringify(fieldsValue)
-        }
-        if (type === 'edit') params.id = record.id;
-        this[`${type}Page`]({
-          cb: loading => this.addModal.genBtnLoading = loading,
-          params
-        }).then(() => {
-          this.$message.success('生成成功');
-          this.getList();
-        })
+    getFieldsValue() {
+      return new Promise(resolve => {
+            const {addModal: {fieldList}} = this;
+            const pormises = Object.keys(fieldList).reduce((acc, key) => {
+              const form = this.$refs[`${key}Form`].$refs.ruleForm;
+              const promise = new Promise(resolve => {
+                form.validate().then(fieldsValue => resolve({[key]:fieldsValue}));
+              })
+              acc.push(promise);
+              return acc;
+            }, []);
+            Promise.all(pormises).then(values => {
+              const fieldsValue = values.reduce((acc, value) => {
+                return {...acc, ...value};
+              }, {});
+              resolve(fieldsValue);
+            });
+      })
+    },
+    async save() {
+      const {addModal: {type, record}} = this;
+      const fieldsValue = await this.getFieldsValue();
+      const params = {
+        pageCfg: JSON.stringify(fieldsValue)
+      }
+      if (type === 'edit') params.id = record.id;
+      this[`${type}Page`]({
+        cb: loading => this.addModal.genBtnLoading = loading,
+        params
+      }).then(() => {
+        this.$message.success('保存成功');
+        this.getList();
       })
     },
     getList({fieldsValue = {}} = {}) {

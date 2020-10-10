@@ -2,13 +2,21 @@ const chalk = require('chalk');
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
+const chineseToPinyin = require('chinese-to-pinyin');
 const noop = () => {}
 
-module.exports.outputFile = ({
+function toPinyin(chinese) {
+    return chineseToPinyin(chinese, {keepRest: true,removeTone: true}).split(/\s/)
+        .reduce((acc, str) => {
+            acc += upCase0(str);
+            return acc;
+        }, '');
+}
+function outputFile ({
     outputPath = path.join(__dirname, '../../public/genFile/output'),
     fileName,
     data
-                             }) => {
+                             }) {
     return new Promise((resolve,reject) => {
         function wf() {
             fs.writeFile(`${outputPath}/${fileName}`, data, err => {
@@ -27,14 +35,14 @@ module.exports.outputFile = ({
     })
 }
 
-module.exports.zipFile = ({
+function zipFile({
                               onClose = noop,
                               onEnd = noop,
                               onWarning = noop,
                               onError = noop,
                               outputPath,
                               archiveDir
-                          }) => {
+                          }) {
 // create a file to stream archive data to.
     const output = fs.createWriteStream(outputPath);
     const archive = archiver('zip', {
@@ -92,7 +100,7 @@ archiver has been finalized and the output file descriptor has closed.
  * @param list 列表字符串
  * @returns {*[]}
  */
-module.exports.listToObj = list => {
+function listToObj(list) {
     return list.replace(/_|\n/g,'').split(',').reduce((acc,entry,idx,arr) => {
         const item = entry.split('|').reduce((attrs,entry) => {
             const [key,val] = entry.split(':');
@@ -104,13 +112,15 @@ module.exports.listToObj = list => {
     }, []);
 }
 
-module.exports.upCase0 = str => str[0].toUpperCase() + str.slice(1)
+function upCase0(str) {
+    return str[0].toUpperCase() + str.slice(1)
+}
 
 /**
  * 删除指定路径下的文件，不删除目录
   * @param path 要删除文件的路劲
  */
-module.exports.delDirFiles = function delDirFiles(path) {
+function delDirFiles(path) {
     let files = [];
     if(fs.existsSync(path)){
         files = fs.readdirSync(path);
@@ -126,7 +136,7 @@ module.exports.delDirFiles = function delDirFiles(path) {
     }
 }
 
-module.exports.capitalToUnderscore = str => {
+function capitalToUnderscore(str) {
     str = str.split('').reduce((acc,letter,index) => {
         if (/^[A-Z]$/.test(letter) && index !== 0) {
             acc += '_' + letter;
@@ -137,14 +147,14 @@ module.exports.capitalToUnderscore = str => {
     }, '');
     return str.toLowerCase();
 }
-module.exports.debugLog = ({info, color='red'}) => {
+function debugLog({info, color='red'}) {
     const isObj = typeof info === 'object';
     if (isObj) info = JSON.stringify(info);
     console.log(chalk.yellow('=========debug info========'));
     console.log(chalk[color](info));
     console.log(chalk.yellow('=========debug info========'));
 }
-module.exports.formatOutput = ({data = {},  msg, code = 0, err} = {}) => {
+function formatOutput({data = {},  msg, code = 0, err} = {}) {
     msg = msg || 'success';
     if (code === 1) msg = '服务器内部错误';
     return {
@@ -153,4 +163,16 @@ module.exports.formatOutput = ({data = {},  msg, code = 0, err} = {}) => {
         code,
         err
     }
-};
+}
+
+module.exports = {
+    toPinyin,
+    outputFile,
+    zipFile,
+    listToObj,
+    upCase0,
+    delDirFiles,
+    capitalToUnderscore,
+    debugLog,
+    formatOutput
+}

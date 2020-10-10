@@ -2,7 +2,6 @@ const express = require('express');
 const Page = require('../db/models/page');
 const router = new express.Router();
 const path = require('path');
-const fs = require('fs');
 const multer  = require('multer');
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -14,8 +13,9 @@ const storage = multer.diskStorage({
 })
 const upload = multer({storage});
 const auth = require('../middleware/auth');
-const {formatOutput} = require('../util/appFunc');
+const {formatOutput, delDirFiles} = require('../util/appFunc');
 const {genPageFile} = require("../genCode/page/genPageFile")
+const {replacePageField} = require('../genCode/page/index')
 
 router.post('/page/add', auth, async (req,res) => {
     try {
@@ -40,8 +40,18 @@ router.post('/page/add', auth, async (req,res) => {
     }
 });
 
-router.post('/page/upload', auth,upload.array('file',), async (req,res) => {
-    debugLog({info: req.files});
+function clearUploadDir(req,res,next) {
+    const outputPath = path.join(__dirname, '../../public/upload');
+    delDirFiles(outputPath);
+    next();
+}
+
+router.post('/page/upload', auth, clearUploadDir, upload.array('file',), (req,res) => {
+    res.status(200).send(formatOutput({data: req.files}));
+});
+
+router.post('/page/fieldReplace', auth, clearUploadDir, upload.array('file',), async (req,res) => {
+    await replacePageField({cfg:req.body,files:req.files});
     res.status(200).send(formatOutput({data: req.files}));
 });
 
@@ -86,6 +96,7 @@ router.get('/page/:id', auth, async (req,res) => {
     try {
         const page = await Page.findOne({_id: req.params.id, owner: req.user._id});
         if (page) {
+            await genPageFile({cfg: {pageCfg: page.pageCfg}});
             res.status(200).send(formatOutput({data: page}));
         } else {
             res.status(400).send(formatOutput({
