@@ -61,7 +61,8 @@ router.post('/page/list', auth, async (req,res) => {
         const pages = await Page.find({
             owner: req.user._id
         }).limit(pageSize)
-            .skip(pageSize * (curPage - 1));
+            .skip(pageSize * (curPage - 1))
+            .sort({createdAt: -1})
 
         res.status(200).send(formatOutput({
             data: {

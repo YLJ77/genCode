@@ -50,10 +50,9 @@
           <template v-slot:overlay>
             <a-menu>
               <a-menu-item v-for="extension in ['View.js','Serv.js','Less.less','Mod.js','.json','.zip']" :key="extension">
-                <a v-if="extension === '.zip'" :href="`http://127.0.0.1:3000/genFile/${$refs.globalForm.form.fileName + extension}`" target="_blank">{{$refs.globalForm.form.fileName + extension}}</a>
-                <a v-else :href="`http://127.0.0.1:3000/genFile/output/${$refs.globalForm.form.fileName + extension}`" target="_blank">{{$refs.globalForm.form.fileName + extension}}</a>
+                <a v-if="extension === '.zip'" :href="`http://127.0.0.1:3000/genFile/${$refs?.globalForm?.form?.fileName + extension}`" target="_blank">{{$refs?.globalForm?.form?.fileName + extension}}</a>
+                <a v-else :href="`http://127.0.0.1:3000/genFile/output/${$refs?.globalForm?.form?.fileName + extension}`" target="_blank">{{$refs?.globalForm?.form?.fileName + extension}}</a>
               </a-menu-item>
-              <a-menu-item>foo</a-menu-item>
             </a-menu>
           </template>
           <a-button>查看文件<DownOutlined /></a-button>
@@ -106,7 +105,7 @@ export default {
             }),
         record: null,  // 编辑行数据
         type: 'add', // add | edit
-        activePanel: ['globalParam'/*,'panelParam','tableParam', 'servParam'*/],
+        activePanel: ['globalParam', 'modalParam'/*,'panelParam','tableParam', 'servParam'*/],
         title: '创建页面',
         batchBtns: [],
         importUrl: 'url',
@@ -177,6 +176,22 @@ export default {
                   }
                 });
               }
+            },
+          ],
+          modal: [
+            {
+              type: 'input',
+              decorator: ['parentFileName', {initialValue: '',}],
+              formItem: {
+                label: '父文件名'
+              },
+            },
+            {
+              type: 'input',
+              decorator: ['title', {initialValue: '',}],
+              formItem: {
+                label: '标题'
+              },
             },
           ],
           serv: [
@@ -578,7 +593,7 @@ export default {
       });
     },
     setFieldsValue({fieldsValue,form}) {
-      Object.keys(fieldsValue).forEach(key => form[key] = fieldsValue[key]);
+      fieldsValue && Object.keys(fieldsValue).forEach(key => form[key] = fieldsValue[key]);
     },
     setFormsValue({cfg}) {
       const {addModal: {fieldList}} = this;

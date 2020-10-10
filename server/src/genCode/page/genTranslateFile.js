@@ -4,7 +4,7 @@ const {upCase0, listToObj,outputFile} = require('../../util/appFunc');
 module.exports.genTranslateFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
-        const {global,panel,table} = cfg;
+        const {global,panel,table,modal} = cfg;
         let {fileName} = global;
         fileName = upCase0(fileName);  // 首字母大写
         const panelListT = listToObj(panel.fieldList).reduce((acc, entry) => {
@@ -39,11 +39,12 @@ module.exports.genTranslateFile = ({cfg}) => {
         ({
             panelTitle: translate.panelTitle,
         } = panel);
+        if (modal.title) translate[fileName] = modal.title;
         let data = {
             "resultCode": 0,
             "resultMsg": "",
             "data": {
-                ...commonTranslate,
+                ...(modal.title ? {} : commonTranslate),
                 ...panelListT,
                 ...columnsT,
                 ...batchBtnsT,

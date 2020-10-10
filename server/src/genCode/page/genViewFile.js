@@ -1,10 +1,10 @@
 const translate = require('./translate.json');
-const {capitalToUnderscore, upCase0, listToObj,outputFile} = require('../../util/appFunc');
+const {capitalToUnderscore, upCase0, downCase0, listToObj,outputFile} = require('../../util/appFunc');
 
 module.exports.genViewFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
-        const {global,panel,table,request} = cfg;
+        const {global,panel,table,request,modal} = cfg;
         let {fileName} = global;
         fileName = upCase0(fileName);  // 首字母大写
         const pageId = capitalToUnderscore(fileName[0].toLowerCase() + fileName.slice(1));  // 大写字母用下划线连接
@@ -83,8 +83,9 @@ module.exports.genViewFile = ({cfg}) => {
         }, '[')
         let data = `import React, {Component} from "react";
 import {YxListPage} from 'yx-widget'
-import {Form${global.tabList && ',Tabs'}} from 'antd'
+import {Form${(global.tabList && ',Tabs') || (modal.title && ',Modal')}} from 'antd'
 import {observer,inject} from 'mobx-react'
+import {useStrict} from 'mobx'
 import {withRouter} from "react-router-dom";
 import {get} from "lodash";
 import CubeI8N from "utils/cubeI8N";
@@ -102,10 +103,11 @@ ${
             return acc;
     }, '')           
 }
+useStrict(false)
 // 注入全局Store
 @inject("AppStore")
 // 在视图注入module层数据
-@inject("${fileName}Mod")
+@inject("${modal.title ? modal.parentFileName : fileName}Mod")
 // 在组件中可通过this.props.history.push跳转路由
 @withRouter
 // 将组件设置为响应式组件，成为观察者，以便响应被观察数据的变化
@@ -114,7 +116,7 @@ class ${fileName}View extends Component {
   constructor(props, context) {
     super(props, context);
     this.appStore = this.props.AppStore;
-    this.store = this.props.${fileName}Mod;
+    this.store = this.props.${modal.title ? modal.parentFileName : fileName}Mod;
     this.translate = () => '';
     this.state = {
         version: 0,
@@ -248,6 +250,13 @@ class ${fileName}View extends Component {
     }
     return <div id="${pageId}">
       ${
+            // modal-begin
+            modal.title && `<Modal title={translate('${downCase0(fileName)}')/*${modal.title}*/}
+onCancel={() => this.store.chooseCreator.visible = false}
+visible={this.store.chooseCreator.visible}>`
+            // modal-end
+        }
+      ${
             // tabList-begin
             global.tabList && listToObj(global.tabList).reduce((acc,entry,idx,arr) => {
                 const {tab,key} = entry
@@ -263,10 +272,10 @@ class ${fileName}View extends Component {
                 }
                 return acc;
             }, '')
-            
             // tabList-end
         }
       <YxListPage {...params}/>
+      ${modal.title && '</Modal>'}
     </div>
   }
 }

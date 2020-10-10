@@ -116,6 +116,10 @@ function upCase0(str) {
     return str[0].toUpperCase() + str.slice(1)
 }
 
+function downCase0(str) {
+    return str[0].toLowerCase() + str.slice(1)
+}
+
 /**
  * 删除指定路径下的文件，不删除目录
   * @param path 要删除文件的路劲
@@ -171,6 +175,7 @@ module.exports = {
     zipFile,
     listToObj,
     upCase0,
+    downCase0,
     delDirFiles,
     capitalToUnderscore,
     debugLog,
