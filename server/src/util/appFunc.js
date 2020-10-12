@@ -158,6 +158,7 @@ function debugLog({info, color='red'}) {
     console.log(chalk[color](info));
     console.log(chalk.yellow('=========debug info========'));
 }
+
 function formatOutput({data = {},  msg, code = 0, err} = {}) {
     msg = msg || 'success';
     if (code === 1) msg = '服务器内部错误';
@@ -167,6 +168,23 @@ function formatOutput({data = {},  msg, code = 0, err} = {}) {
         code,
         err
     }
+}
+
+function genFormItem({info}) {
+    let {label,id,type,required} = info;
+    type = upCase0(type);
+    const placeholder = ['Select','Date'].includes(type) ? 'pleaseSelect': 'pleaseEnter';
+    return `
+            {
+                type: '${upCase0(type)}',
+                controlItemParam: {
+                    id: '${id}',
+                    label: translate('${id}'),  // ${label}
+                    placeholder: translate('${placeholder}'), // ${placeholder}
+                    rules: [${required === '1' ? '{required:true}' : ''}],
+                    ${type === 'Select' ? 'data: []' : ''}
+                }
+            },`;
 }
 
 module.exports = {
@@ -179,5 +197,6 @@ module.exports = {
     delDirFiles,
     capitalToUnderscore,
     debugLog,
-    formatOutput
+    formatOutput,
+    genFormItem
 }

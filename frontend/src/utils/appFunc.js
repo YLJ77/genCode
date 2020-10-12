@@ -45,3 +45,20 @@ export const genFormAndRules = (cfgList) => {
         return acc;
     }, {model:{},rules:{}})
 }
+
+/**
+ * 将列表字符串转换为key-value对象数组
+ * @param list 列表字符串
+ * @returns {*[]}
+ */
+export function listToObj(list) {
+    return list.replace(/_|\n/g,'').split(',').reduce((acc,entry) => {
+        const item = entry.split('|').reduce((attrs,entry) => {
+            const [key,val] = entry.split(':');
+            attrs[key] = val;
+            return attrs;
+        }, {});
+        acc.push(item);
+        return acc;
+    }, []);
+}

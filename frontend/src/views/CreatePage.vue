@@ -14,6 +14,7 @@
     </app-table>
     <a-modal
         v-model:visible="addModal.visible"
+        :destroyOnClose="true"
         :title="addModal.title"
         :footer="null"
         :width="800"
@@ -73,7 +74,7 @@ import AppForm from "@/components/AppForm";
 import AppTable from "@/components/AppTable";
 import AppUpload from "@/components/AppUpload";
 import {mapActions} from 'vuex'
-import {upCase0, toPinyin} from "@/utils/appFunc";
+import {upCase0, toPinyin,listToObj} from "@/utils/appFunc";
 import {DownOutlined} from '@ant-design/icons-vue'
 
 export default {
@@ -129,7 +130,7 @@ export default {
             {
               type: 'input',
               decorator: ['moduleName', {
-                initialValue: 'ClaimMgmt',
+                initialValue: '',
                 rules: [
                   {required: true,message: '请输入模块名'}
                 ]
@@ -141,13 +142,31 @@ export default {
             {
               type: 'input',
               decorator: ['router', {
-                initialValue: 'AuthorizationMgmt/VinBlock',
+                initialValue: '',
                 rules: [
                   {required: true,message: '请输入路径名'}
                 ]
               }],
               formItem: {
                 label: '语言包路径'
+              },
+            },
+            {
+              type: 'select',
+              decorator: ['pageType', {
+                initialValue: 'listPage',
+                rules: [
+                  {required: true,message: '请选择页面类型'}
+                ]
+              }],
+              formItem: {
+                label: '页面类型'
+              },
+              field: {
+                options: [
+                  {value: 'listPage', label: '列表页面',key: 1/*key属性用来防止大量antd console输出*/},
+                  {value: 'formPage', label: '表单页面',key: 2},
+                ]
               },
             },
             {
@@ -234,11 +253,28 @@ export default {
           ],
           panel: [
             {
-              type: 'input',
+              type: 'textarea',
               decorator: ['panelTitle'],
               formItem: {
                 label: '标题'
               },
+              btns: [
+                {
+                  text: '解析',
+                  action: ({fieldsValue}) => {
+                    fieldsValue.panelTitle = this.splitColonToVal({
+                      fieldValue: fieldsValue.panelTitle,
+                      accCtrl: ({entry: title}) => {
+                        const labelPinyin = toPinyin(title);
+                        return `title:${title}\n|key:__panelTitle_${labelPinyin}`;
+                      }
+                    });
+                  }
+                }
+              ],
+              field: {
+                placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:'
+              }
             },
             {
               type: 'textarea',
@@ -253,14 +289,40 @@ export default {
                 allowClear: true,
                 autoSize: { minRows: 4 },
                 placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:'
-              }
-            },
-            {
-              type: 'btn',
-              text: '解析',
-              action: ({fieldsValue}) => {
-                this.analyse({fieldsValue});
-              }
+              },
+              btns: [
+                {
+                  text: '解析第一步',
+                  action: ({fieldsValue}) => {
+                    const {panelTitle,fieldList} = fieldsValue;
+                    if (panelTitle) {
+                      fieldsValue.fieldList = listToObj(panelTitle).reduce((acc,entry,idx,arr) => {
+                        const {key:section, title} = entry;
+                        acc += `section:${section}\n|fieldList:__fieldList${idx}__`
+                        if (idx !== arr.length - 1) acc += ',\n\n';
+                        return acc;
+                      }, '')
+                    }
+                  }
+                },
+                {
+                  text: '解析第二步',
+                  action: ({fieldsValue}) => {
+                    const {fieldList} = fieldsValue;
+                    fieldsValue.fieldList = listToObj(fieldList).reduce((acc,field,idx,arr) => {
+                      const {section,fieldList} = field;
+                      acc += fieldList.split(/:|：/).reduce((fieldAcc,label,fieldIdx,fieldArr) => {
+                        const labelPinyin = toPinyin(label);
+                        fieldAcc += `section:${section}\n|label:${label}\n|id:__panelId_${labelPinyin}__\n|type:__String__\n|required:0`;
+                        if (fieldIdx !== fieldArr.length - 1) fieldAcc += ',\n\n';
+                        return fieldAcc;
+                      }, '');
+                      if (idx !== arr.length - 1) acc += ',\n\n';
+                      return acc;
+                    }, '')
+                  }
+                }
+              ]
             },
           ],
           table: [
@@ -582,15 +644,6 @@ export default {
         }
         return acc;
       }, '');
-    },
-    analyse({fieldsValue}) {
-      fieldsValue.fieldList = this.splitColonToVal({
-        fieldValue: fieldsValue.fieldList,
-        accCtrl: ({entry: label}) => {
-          const labelPinyin = toPinyin(label);
-          return `label:${label}\n|id:__panelId_${labelPinyin}__\n|type:__String__\n|required:0`;
-        }
-      });
     },
     setFieldsValue({fieldsValue,form}) {
       fieldsValue && Object.keys(fieldsValue).forEach(key => form[key] = fieldsValue[key]);

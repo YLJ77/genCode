@@ -1,29 +1,15 @@
 const translate = require('./translate.json');
-const {capitalToUnderscore, upCase0, downCase0, listToObj,outputFile} = require('../../util/appFunc');
+const {capitalToUnderscore, genFormItem, upCase0, downCase0, listToObj,outputFile} = require('../../util/appFunc');
 
-module.exports.genViewFile = ({cfg}) => {
+module.exports.genListPageFile = ({cfg}) => {
     return new Promise(async (resolve, reject) => {
         cfg = JSON.parse(cfg.pageCfg);
-        const {global,panel,table,request,modal} = cfg;
+        const {global,panel,table,request,modal = {}} = cfg;
         let {fileName} = global;
         fileName = upCase0(fileName);  // 首字母大写
         const pageId = capitalToUnderscore(fileName[0].toLowerCase() + fileName.slice(1));  // 大写字母用下划线连接
         const panelList = panel.fieldList === '' ? '[]' : listToObj(panel.fieldList).reduce((acc, entry,idx,arr) => {
-            let {label,id,type,required} = entry
-            type = upCase0(type);
-            const placeholder = ['Select','Date'].includes(type) ? 'pleaseSelect': 'pleaseEnter';
-            acc += `
-            {
-                type: '${upCase0(type)}',
-                controlItemParam: {
-                    id: '${id}',
-                    label: translate('${id}'),  // ${label}
-                    placeholder: translate('${placeholder}'), // ${translate[placeholder]}
-                    rules: [${required === '1' ? '{required:true}' : ''}],
-                    ${type === 'Select' ? 'data: []' : ''}
-                }
-            },
-            `;
+            acc += genFormItem({info:entry});
             if (idx === arr.length - 1) acc += ']';
             return acc;
         }, '[');
@@ -211,12 +197,14 @@ class ${fileName}View extends Component {
           isRowSelection: ${table.isRowSelection ? 'true' : 'false'},  // 是否显示复选框
           isColumnNumber: ${table.isColumnNumber ? 'true' : 'false'},  // 是否开启序号
           ${
-            table.isRowSelection ? `onCheckbox: (keys,rows) => {  // 复选框点击时触发的函数
-                this.state.table.selectedRows = rows;
-                this.state.table.selectedRowKeys = keys;
-                this.updateView();
-              },
-            ` : '' 
+            table.isRowSelection ? `rowSelection: {
+        selectedRowKeys: this.state.table.selectedRowKeys,
+        onChange: (selectedRowKeys, selectedRows) => {
+          this.state.table.selectedRows = selectedRows;
+          this.state.table.selectedRowKeys = selectedRowKeys;
+          this.updateView();
+        }
+      },` : '' 
         }
         batchBtns: this.batchBtns()   
       }

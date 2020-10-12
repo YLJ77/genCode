@@ -16,12 +16,27 @@
                 <slot :name="cfg.decorator[0] + 'AddonBefore'" :props="{form,cfg}"></slot>
               </template>
             </a-input>
-            <a-textarea v-else-if="cfg.type === 'textarea'"
-                        v-model:value="form[getDecoratorId(cfg)]"
-                        v-bind="cfg.field || {}"/>
+            <div class="textarea-wrap" v-else-if="cfg.type === 'textarea'">
+              <a-textarea v-model:value="form[getDecoratorId(cfg)]"
+                        v-bind="cfg.field || {}"
+                          :allowClear="cfg?.field?.allowClear === undefined ? true: cfg.field.allowClear"
+                          :autoSize="cfg?.field?.autoSize === undefined ? {minRows:4}: cfg.field.autoSize"
+              />
+              <template v-if="cfg.btns">
+                <a-button v-for="(btn, idx) in cfg.btns"
+                          class="area-btn"
+                          :style="{top: `${idx * 45}px`}"
+                          v-on="btn"
+                          @click="btn.action({fieldsValue:form,getForm,cfg})">{{btn.text}}</a-button>
+              </template>
+            </div>
             <a-checkbox-group v-else-if="cfg.type === 'checkbox'"
                               v-model:value="form[getDecoratorId(cfg)]"
                               v-bind="cfg.field || {}"/>
+            <a-select v-else-if="cfg.type === 'select'"
+                v-model:value="form[getDecoratorId(cfg)]"
+                v-bind="cfg.field || {}"
+                v-on="cfg?.field?.evt || {}"/>
           </a-form-item>
           <div v-else-if="cfg.type === 'btn'" class="slot-btn">
             <a-button @click="cfg.action({fieldsValue:form,getForm,cfg})">{{cfg.text}}</a-button>
@@ -53,6 +68,14 @@
     position: absolute;
     top: -130px;
     right: 0;
+  }
+}
+.textarea-wrap {
+  position: relative;
+  .area-btn {
+    position: absolute;
+    top: 0;
+    right: -80px;
   }
 }
 </style>
