@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 const chineseToPinyin = require('chinese-to-pinyin');
+const translate = require('../genCode/page/translate.json');
 const noop = () => {}
 
 function toPinyin(chinese) {
@@ -180,7 +181,7 @@ function genFormItem({info}) {
                 controlItemParam: {
                     id: '${id}',
                     label: translate('${id}'),  // ${label}
-                    placeholder: translate('${placeholder}'), // ${placeholder}
+                    placeholder: translate('${placeholder}'), // ${translate[placeholder]}
                     rules: [${required === '1' ? '{required:true}' : ''}],
                     ${type === 'Select' ? 'data: []' : ''}
                 }

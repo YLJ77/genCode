@@ -10,9 +10,10 @@ module.exports.genFormPageFile = ({cfg}) => {
         const pageId = capitalToUnderscore(fileName[0].toLowerCase() + fileName.slice(1));  // 大写字母用下划线连接
         const fieldList = listToObj(panel.fieldList);
         const formInfo = listToObj(panel.panelTitle).reduce((acc,entry) => {
-            const {key:section,title} = entry;
+            const {key:section,title,col} = entry;
             acc.push({
                 section: section,
+                col,
                 title: title,
                 fieldList: fieldList.filter(field => field.section === section)
             });
@@ -21,7 +22,7 @@ module.exports.genFormPageFile = ({cfg}) => {
 
         let data = `import React, {Component} from "react";
 import {YxDynamicForm} from 'yx-widget'
-import {Form${(global.tabList && ',Tabs') || (modal.title && ',Modal')}} from 'antd'
+import {Form${global.tabList && ',Tabs'}${modal.title && ',Modal'}${formInfo.length > 1  && ',PageHeader'}} from 'antd'
 import {observer,inject} from 'mobx-react'
 import {useStrict} from 'mobx'
 import {withRouter} from "react-router-dom";
@@ -72,47 +73,77 @@ class ${fileName}View extends Component {
       const {translate} = this;
       return ${
             formInfo.reduce((acc,form,idx,arr) => {
-                const {section,title,fieldList} = form;
+                const {section,col,title,fieldList} = form;
+                let rowInfo = '';
+                if (col === 'col') {
+                    rowInfo = `{
+                        rowParam: {},
+                        col: [
+                            {
+                                colParam: {},
+                                controlList: [${
+                                        fieldList.reduce((acc, field) => {
+                                            acc += genFormItem({info: field});
+                                            return acc;
+                                        }, '')
+                                    }
+                                ]
+                            }
+                        ]
+                    }`
+                } else if (typeof +col === 'number') {
+                    rowInfo = fieldList.reduce((acc,field,idx,arr) => {
+                        if (idx % 3 !== 0) return acc;
+                        const list = [];
+                        for (let i=0;i<col; i++) {
+                            if (arr[idx + i]) list.push(arr[idx + i]);
+                        }
+                        acc += `{
+                            rowParam: {},
+                            col: [
+                                    {
+                                        colParam: {},
+                                        controlList: [${
+                                        list.reduce((acc, field) => {
+                                            acc += genFormItem({info: field});
+                                            return acc;
+                                        }, '')
+                                    }
+                                ]
+                            }
+                        ]
+                        },\n`;
+                        return acc;
+                    },'');
+                }
                 acc += `{
                     section: '${section}',
                     title: translate('${section}'), // ${title}
                     param: {
                         form: [
+                            {
                             row: [
-                                {
-                                    rowParam: {},
-                                    col: [
-                                        {
-                                            colParam: {},
-                                            controlList: [
-                                                ${
-                                                    fieldList.reduce((acc,field,idx,arr)=>{
-                                                        acc += genFormItem({info:field});
-                                                        return acc;
-                                                    }, '')
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
+                                ${rowInfo}
                             ]
+                            }
                         ]
                     }
-                },`;
-                if (idx === arr.length - 1) acc == ']'
+                },\n`;
+                if (idx === arr.length - 1) acc += ']'
                 return acc;
-            }, '[')
+            }, '[\n')
         }
   }
   render() {
     const {translate} = this;
+    const formParam = this.formParam();
     return <div id="${pageId}">
       ${
             // modal-begin
             modal.title && `<Modal title={translate('${downCase0(fileName)}')/*${modal.title}*/}
-width={1000}
-onCancel={() => this.store.${downCase0(fileName)}.visible = false}
-visible={this.store.${downCase0(fileName)}.visible}>`
+            width={1000}
+            onCancel={() => this.store.${downCase0(fileName)}.visible = false}
+            visible={this.store.${downCase0(fileName)}.visible}>`
             // modal-end
         }
       ${
@@ -120,12 +151,10 @@ visible={this.store.${downCase0(fileName)}.visible}>`
             global.tabList && listToObj(global.tabList).reduce((acc,entry,idx,arr) => {
                 const {tab,key} = entry
                 if (idx === 0) {
-                    acc += `<Tabs defaultActiveKey="${key}" onChange={(val) => this.onTabChange(val)}>
-`;
+                    acc += `<Tabs defaultActiveKey="${key}" onChange={(val) => this.onTabChange(val)}>\n`;
                 }
                 acc += `{/* ${tab} */}
-<TabPane tab={translate('${key}')} key="${key}"/>
-`;
+                <TabPane tab={translate('${key}')} key="${key}"/>\n`;
                 if (idx === arr.length - 1) {
                     acc += '</Tabs>';
                 }
@@ -133,8 +162,21 @@ visible={this.store.${downCase0(fileName)}.visible}>`
             }, '')
             // tabList-end
         }
-      
-              <YxDynamicForm form={this.props.form} formParam={topFormParam}/>
+        ${
+            `{
+                formParam.map((form,idx,arr) => {
+                    if (formParam.length > 1) {
+                        return <PageHeader 
+                                style={{borderBottom: idx !== arr.length - 1 ? '1px solid rgb(235, 237, 240)': 'none'}}
+                                title={translate(form.section)}>
+                          <YxDynamicForm form={this.props.form} formParam={form.param}/>
+                        </PageHeader>
+                    } else {
+                        return <YxDynamicForm form={this.props.form} formParam={form.param}/>
+                    }
+                })
+            }`
+        }
       ${modal.title && '</Modal>'}
     </div>
   }

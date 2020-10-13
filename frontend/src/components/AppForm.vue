@@ -20,7 +20,7 @@
               <a-textarea v-model:value="form[getDecoratorId(cfg)]"
                         v-bind="cfg.field || {}"
                           :allowClear="cfg?.field?.allowClear === undefined ? true: cfg.field.allowClear"
-                          :autoSize="cfg?.field?.autoSize === undefined ? {minRows:4}: cfg.field.autoSize"
+                          :autoSize="cfg?.field?.autoSize === undefined ? {minRows:4,maxRows:6}: cfg.field.autoSize"
               />
               <template v-if="cfg.btns">
                 <a-button v-for="(btn, idx) in cfg.btns"

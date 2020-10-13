@@ -1,4 +1,3 @@
-const translate = require('./translate.json');
 const {capitalToUnderscore, genFormItem, upCase0, downCase0, listToObj,outputFile} = require('../../util/appFunc');
 
 module.exports.genListPageFile = ({cfg}) => {
@@ -13,6 +12,7 @@ module.exports.genListPageFile = ({cfg}) => {
             if (idx === arr.length - 1) acc += ']';
             return acc;
         }, '[');
+        const [panelTitle] = listToObj(panel.panelTitle);
 
         let columnsAttr = listToObj(table.columns);
         table.isColumnNumber = columnsAttr.some(entry => entry.title === '序号');
@@ -136,7 +136,7 @@ class ${fileName}View extends Component {
       const {translate} = this;
       return {
           containerParam: {
-            ${panel.panelTitle ? `header: translate("panelTitle"), // ${panel.panelTitle}` : ''}  
+            ${panel.panelTitle ? `header: translate("${panelTitle.key}"), // ${panelTitle.title}` : ''}  
           },
           resetParam: {
               beforeClick: () => {}

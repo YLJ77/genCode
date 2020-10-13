@@ -11,7 +11,7 @@ const pageSchema = new mongoose.Schema({
 */
     },
     translate: {  // translate文件内容
-        type: String,
+        type: JSON,
         trim: true,
         default: ''
     },

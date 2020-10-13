@@ -254,7 +254,7 @@ export default {
           panel: [
             {
               type: 'textarea',
-              decorator: ['panelTitle'],
+              decorator: ['initialPanelTitle',{initialValue: ''}],
               formItem: {
                 label: '标题'
               },
@@ -263,10 +263,10 @@ export default {
                   text: '解析',
                   action: ({fieldsValue}) => {
                     fieldsValue.panelTitle = this.splitColonToVal({
-                      fieldValue: fieldsValue.panelTitle,
+                      fieldValue: fieldsValue.initialPanelTitle,
                       accCtrl: ({entry: title}) => {
                         const labelPinyin = toPinyin(title);
-                        return `title:${title}\n|key:__panelTitle_${labelPinyin}`;
+                        return `title:${title}\n|key:__panelTitle_${labelPinyin}\n|col:col`;
                       }
                     });
                   }
@@ -278,42 +278,53 @@ export default {
             },
             {
               type: 'textarea',
-              decorator: ['fieldList',{
-                // initialValue:'提醒创建时间：提醒创建时间：是否OEM监控监控有效时间：监控规则：监控原因'
-                initialValue:''
-              }],
+              decorator: ['panelTitle',{initialValue: ''}],
               formItem: {
-                label: '表单列表'
+                label: '格式化标题'
               },
-              field: {
-                allowClear: true,
-                autoSize: { minRows: 4 },
-                placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:'
+            },
+            {
+              type: 'textarea',
+              decorator: ['initialFieldList',{initialValue:''}],
+              formItem: {
+                label: '起始表单列表'
               },
               btns: [
                 {
                   text: '解析第一步',
                   action: ({fieldsValue}) => {
-                    const {panelTitle,fieldList} = fieldsValue;
+                    const {panelTitle,initialFieldList} = fieldsValue;
+                    let fieldListInfo = initialFieldList ? listToObj(initialFieldList) : [];
                     if (panelTitle) {
-                      fieldsValue.fieldList = listToObj(panelTitle).reduce((acc,entry,idx,arr) => {
-                        const {key:section, title} = entry;
-                        acc += `section:${section}\n|fieldList:__fieldList${idx}__`
+                      fieldsValue.initialFieldList = listToObj(panelTitle).reduce((acc,entry,idx,arr) => {
+                        const {key:section,col} = entry;
+                        let fieldList = `__fieldList${idx}__`;
+                        if (fieldListInfo.length) fieldList = fieldListInfo[idx].fieldList;
+                        acc += `section:${section}\n|col:${col}\n|fieldList:${fieldList}`;
                         if (idx !== arr.length - 1) acc += ',\n\n';
                         return acc;
                       }, '')
                     }
                   }
                 },
+              ]
+            },
+            {
+              type: 'textarea',
+              decorator: ['fieldList',{initialValue: ''}],
+              formItem: {
+                label: '格式化表单列表'
+              },
+              btns: [
                 {
                   text: '解析第二步',
                   action: ({fieldsValue}) => {
-                    const {fieldList} = fieldsValue;
-                    fieldsValue.fieldList = listToObj(fieldList).reduce((acc,field,idx,arr) => {
-                      const {section,fieldList} = field;
+                    const {initialFieldList} = fieldsValue;
+                    fieldsValue.fieldList = listToObj(initialFieldList).reduce((acc,field,idx,arr) => {
+                      const {section,fieldList,col} = field;
                       acc += fieldList.split(/:|：/).reduce((fieldAcc,label,fieldIdx,fieldArr) => {
                         const labelPinyin = toPinyin(label);
-                        fieldAcc += `section:${section}\n|label:${label}\n|id:__panelId_${labelPinyin}__\n|type:__String__\n|required:0`;
+                        fieldAcc += `section:${section}\n|col:${col}\n|label:${label}\n|id:__panelId_${labelPinyin}__\n|type:__String__\n|required:0`;
                         if (fieldIdx !== fieldArr.length - 1) fieldAcc += ',\n\n';
                         return fieldAcc;
                       }, '');
@@ -323,7 +334,7 @@ export default {
                   }
                 }
               ]
-            },
+            }
           ],
           table: [
             {

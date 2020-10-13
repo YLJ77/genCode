@@ -115,15 +115,10 @@ router.patch('/page/:id', auth, async (req,res) => {
     try {
         // const page = await Page.findByIdAndUpdate(req.params.id,req.body,{new: true,runValidators:true});
         let page = await Page.findOne({_id: req.params.id, owner: req.user._id});
+        const {pageCfg} = req.body;
         if (page) {
             const {translate,serv,less,view,mod, err} = await genPageFile({cfg: req.body});
-            const data = {
-                pageCfg: req.body.pageCfg,
-                translate,
-                serv,
-                less,
-                view,
-                mod,
+            const data = { pageCfg, translate, serv, less, view, mod,
                 owner: req.user._id
             };
             if (err) {
