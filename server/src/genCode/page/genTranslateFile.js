@@ -15,6 +15,7 @@ async function getRefPages(cfg) {
 }
 
 function getTranslate({data,key = 'key',txtKey}) {
+    if (!data) return {};
     return listToObj(data).reduce((acc, entry) => {
         acc[entry[key]] = entry[txtKey];
         return acc;
@@ -47,10 +48,19 @@ module.exports.genTranslateFile = ({cfg}) => {
                 return acc;
             }, {});
         const paneTitleT = getTranslate({data: panel.panelTitle,txtKey: 'title'});
-        const panelListT = getTranslate({data: panel.fieldList,key:'id',txtKey: 'label'});
+        const panelBatchBtnsT = getTranslate({data: panel.batchBtns,txtKey: 'text'});
         const batchBtnsT = getTranslate({data: table.batchBtns,txtKey: 'text'});
         const tabListT = getTranslate({data: global.tabList,txtKey: 'tab'});
         const translate = {};
+        const panelListT = listToObj(panel.fieldList).reduce((acc,field) => {
+            const { afterNode, id, label } = field;
+            if (afterNode !== undefined && afterNode !== '0') {
+                const [text,key] = afterNode.split('-');
+                acc[key] = text;
+            }
+            acc[id] = label;
+            return acc;
+        },{});
         if (modal.title) translate[downCase0(fileName)] = modal.title;
         let data = {
             "resultCode": 0,
@@ -59,6 +69,7 @@ module.exports.genTranslateFile = ({cfg}) => {
                 ...(modal.title ? {} : commonTranslate),
                 ...panelListT,
                 ...paneTitleT,
+                ...panelBatchBtnsT,
                 ...columnsT,
                 ...batchBtnsT,
                 ...tabListT,

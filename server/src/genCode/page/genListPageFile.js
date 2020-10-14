@@ -44,7 +44,7 @@ module.exports.genListPageFile = ({cfg}) => {
                 `
             }
             // emum begin
-            if (emum !== '0') {
+/*             if (emum !== '0') {
                 emum = emum.split('/').reduce((emumAcc,entry,idx,arr) => {
                     const [val,label] = entry.split('-');
                     emumAcc += `${val}: '${label}',`
@@ -54,7 +54,8 @@ module.exports.genListPageFile = ({cfg}) => {
                     return emumAcc;
                 }, '{');
                 colAcc += `\nemum: ${emum},`
-            }
+            } */
+            if (emum === '1') colAcc += '\nemum:{val:"label"}'
             // emum end
             // render begin
             if (render !== '0') {
@@ -78,6 +79,7 @@ import CubeI8N from "utils/cubeI8N";
 import './${fileName}Less.less'
 import Serv from './${fileName}Serv'
 ${global.tabList && 'const {TabPane} = Tabs'}
+${global.showSelected === '1' && 'import AppSelectedRowList from "pages/Common/AppSelectedRowList/AppSelectedRowListView"'}
 ${
     // 导入导出配置函数的引入
     table.batchBtns === '' ? '' : listToObj(table.batchBtns)
@@ -193,6 +195,7 @@ class ${fileName}View extends Component {
       return {
           columns,
           rowKey: '${table.rowKey}',
+          dataSource: this.state.table.dataSource,
           isNowrap: ${table.isNowrap ? 'true' : 'false'},  // 是否换行
           isRowSelection: ${table.isRowSelection ? 'true' : 'false'},  // 是否显示复选框
           isColumnNumber: ${table.isColumnNumber ? 'true' : 'false'},  // 是否开启序号
@@ -215,6 +218,16 @@ class ${fileName}View extends Component {
           url: '${request.url}',
           headers: { 'Content-type': 'application/json' },
           beforeRequest: data => {
+            // todo delete-begin
+            this.state.table.dataSource = this.tableParam().columns.map(column => column.dataIndex).reduce((acc,dataIndex,idx,arr) => {
+                const row = {id: idx};
+                arr.forEach((entry,index) => row[entry] = \`\${idx}_\${index}\`);
+                acc.push(row);
+                return acc;
+            }, [])
+            this.updateView();
+            // todo delete-end
+
             this.state.queryParams = data;
             return data;
           },
@@ -223,9 +236,14 @@ class ${fileName}View extends Component {
           }
       }
   }
-  ${
-     global.tabList && `onTabChange(val) {}`           
-   }
+  ${global.tabList && `onTabChange(val) {}\n`}
+  ${global.showSelected === '1' && `onTagClose({e,row}) {
+    const {table: {selectedRowKeys,selectedRows}} = this.state;
+    e.preventDefault();
+    this.state.table.selectedRows = selectedRows.filter(entry => entry.id != row.id)
+    this.state.table.selectedRowKeys = selectedRowKeys.filter(key => key != row.id);
+    this.updateView();
+  }\n`}
   render() {
     const {translate} = this;
     const params = {
@@ -236,12 +254,13 @@ class ${fileName}View extends Component {
       load: ({form}) => {},
       formChange: (ids, changeValue, values) => {},
     }
-    return <div id="${pageId}">
+    return <div ${modal.title ? '' : `id='${pageId}'`}>
       ${
             // modal-begin
             modal.title && `<Modal title={translate('${downCase0(fileName)}')/*${modal.title}*/}
-onCancel={() => this.store.chooseCreator.visible = false}
-visible={this.store.chooseCreator.visible}>`
+                width={1000}
+                onCancel={() => this.store.${downCase0(fileName)}.visible = false}
+                visible={this.store.${downCase0(fileName)}.visible}>\n<div id='${pageId}'>\n`
             // modal-end
         }
       ${
@@ -263,7 +282,13 @@ visible={this.store.chooseCreator.visible}>`
             // tabList-end
         }
       <YxListPage {...params}/>
-      ${modal.title && '</Modal>'}
+      ${
+          global.showSelected && `<AppSelectedRowList
+              displayKey='${global.selectedRowDisplayKey}'
+              selectedRows={this.state.table.selectedRows}
+              onTagClose={params => this.onTagClose(params)}/>`
+      }
+      ${modal.title && '</div>\n</Modal>'}
     </div>
   }
 }

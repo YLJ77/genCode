@@ -19,9 +19,11 @@ module.exports.genFormPageFile = ({cfg}) => {
             });
             return acc;
         }, []);
+        const batchBtns = panel.batchBtns === '' ? [] : listToObj(panel.batchBtns);
+        const hasRequestAction = batchBtns.some(btn => ['import','export'].includes(btn.actionType));
 
         let data = `import React, {Component} from "react";
-import {YxDynamicForm} from 'yx-widget'
+import {YxDynamicForm${batchBtns.length && ',YxButton'}} from 'yx-widget'
 import {Form${global.tabList && ',Tabs'}${modal.title && ',Modal'}${formInfo.length > 1  && ',PageHeader'}} from 'antd'
 import {observer,inject} from 'mobx-react'
 import {useStrict} from 'mobx'
@@ -29,6 +31,7 @@ import {withRouter} from "react-router-dom";
 import CubeI8N from "utils/cubeI8N";
 import './${fileName}Less.less'
 import Serv from './${fileName}Serv'
+${hasRequestAction && 'import AppBtn from "pages/Common/AppBtn/AppBtnView"'}
 ${global.tabList && 'const {TabPane} = Tabs'}
 useStrict(false)
 // 注入全局Store
@@ -134,16 +137,33 @@ class ${fileName}View extends Component {
             }, '[\n')
         }
   }
+  ${
+    batchBtns.length && `batchBtns() {
+        return ${batchBtns.length === 0 ? '[]' : batchBtns.reduce((acc,btn,idx,arr) => {
+            const {text,key,actionType,type,url = ''} = btn;
+            const isRequestAction = ['import','export'].includes(actionType);
+            acc += `{
+                text: '${text}',
+                key: '${key}',
+                actionType: '${actionType}',
+                type: ${"'"+type +"'" + (isRequestAction ? `,\nurl:'${url}',` : '')}
+            },\n`
+            if (idx === arr.length - 1) acc += ']';  
+            return acc;
+        }, '[\n') }
+    }\n`
+  }
   render() {
     const {translate} = this;
     const formParam = this.formParam();
-    return <div id="${pageId}">
+    ${batchBtns.length && 'const batchBtns = this.batchBtns();'}
+    return <div ${modal.title ? '' : `id='${pageId}'`}>
       ${
             // modal-begin
             modal.title && `<Modal title={translate('${downCase0(fileName)}')/*${modal.title}*/}
             width={1000}
             onCancel={() => this.store.${downCase0(fileName)}.visible = false}
-            visible={this.store.${downCase0(fileName)}.visible}>`
+            visible={this.store.${downCase0(fileName)}.visible}>\n<div id='${pageId}'>\n`
             // modal-end
         }
       ${
@@ -162,22 +182,37 @@ class ${fileName}View extends Component {
             }, '')
             // tabList-end
         }
+        <div>
         ${
-            `{
-                formParam.map((form,idx,arr) => {
-                    if (formParam.length > 1) {
-                        return <PageHeader 
-                                style={{borderBottom: idx !== arr.length - 1 ? '1px solid rgb(235, 237, 240)': 'none'}}
-                                title={translate(form.section)}>
-                          <YxDynamicForm form={this.props.form} formParam={form.param}/>
-                        </PageHeader>
-                    } else {
-                        return <YxDynamicForm form={this.props.form} formParam={form.param}/>
-                    }
-                })
-            }`
+            batchBtns.length && `
+                <div className={'app-h-s-v-c'}>
+                {
+                    batchBtns.map(btn => {
+                        const {key,actionType,url,type} = btn;
+                        const isRequestAction = ['import','export'].includes(actionType);
+                        if (isRequestAction) {
+                            return <AppBtn actionType={actionType} style={{marginLeft: '10px'}} url={url} text={translate(key)} type={type}/>
+                        } else {
+                            return <YxButton style={{marginLeft: '10px'}} text={translate(key)} type={type}
+                            onClick={() => {}}/>
+                        }
+                    })
+                }
+                </div>\n`
         }
-      ${modal.title && '</Modal>'}
+        {
+            formParam.map((form,idx,arr) => {
+                return ${
+                    formInfo.length === 1 ? '' : `<PageHeader
+                    style={{borderBottom: idx !== arr.length - 1 ? '1px solid rgb(235, 237, 240)': 'none'}}
+                    title={translate(form.section)}>\n`
+                }
+                <YxDynamicForm form={this.props.form} formParam={form.param}/>
+                ${formInfo.length === 1 ? '' : '</PageHeader>'}
+            })
+        }
+        </div>
+      ${modal.title && '</div>\n</Modal>'}
     </div>
   }
 }

@@ -170,6 +170,31 @@ export default {
               },
             },
             {
+              type: 'select',
+              decorator: ['showSelected', {
+                initialValue: '0',
+                rules: [
+                  {required: true,message: '请选择是否显示选中行'}
+                ]
+              }],
+              formItem: {
+                label: '是否显示选中行'
+              },
+              field: {
+                options: [
+                  {value: '0', label: '否',key: 1/*key属性用来防止大量antd console输出*/},
+                  {value: '1', label: '是',key: 2},
+                ]
+              },
+            },
+            {
+              type: 'input',
+              decorator: ['selectedRowDisplayKey', {initialValue: ''}],
+              formItem: {
+                label: '选中行展示key'
+              },
+            },
+            {
               type: 'textarea',
               decorator: ['tabList',{
                 initialValue:''
@@ -293,18 +318,17 @@ export default {
                 {
                   text: '解析第一步',
                   action: ({fieldsValue}) => {
-                    const {panelTitle,initialFieldList} = fieldsValue;
+                    let {panelTitle,initialFieldList} = fieldsValue;
                     let fieldListInfo = initialFieldList ? listToObj(initialFieldList) : [];
-                    if (panelTitle) {
-                      fieldsValue.initialFieldList = listToObj(panelTitle).reduce((acc,entry,idx,arr) => {
-                        const {key:section,col} = entry;
-                        let fieldList = `__fieldList${idx}__`;
-                        if (fieldListInfo.length) fieldList = fieldListInfo[idx].fieldList;
-                        acc += `section:${section}\n|col:${col}\n|fieldList:${fieldList}`;
-                        if (idx !== arr.length - 1) acc += ',\n\n';
-                        return acc;
-                      }, '')
-                    }
+                    panelTitle = panelTitle || 'title:title\n|key:key\n|col:col\n|fieldList:__fieldList__';
+                    fieldsValue.initialFieldList = listToObj(panelTitle).reduce((acc,entry,idx,arr) => {
+                      const {key:section,col} = entry;
+                      let fieldList = `__fieldList${idx}__`;
+                      if (fieldListInfo.length) fieldList = fieldListInfo[idx].fieldList;
+                      acc += `section:${section}\n|col:${col}\n|fieldList:${fieldList}`;
+                      if (idx !== arr.length - 1) acc += ',\n\n';
+                      return acc;
+                    }, '')
                   }
                 },
               ]
@@ -323,8 +347,8 @@ export default {
                     fieldsValue.fieldList = listToObj(initialFieldList).reduce((acc,field,idx,arr) => {
                       const {section,fieldList,col} = field;
                       acc += fieldList.split(/:|：/).reduce((fieldAcc,label,fieldIdx,fieldArr) => {
-                        const labelPinyin = toPinyin(label);
-                        fieldAcc += `section:${section}\n|col:${col}\n|label:${label}\n|id:__panelId_${labelPinyin}__\n|type:__String__\n|required:0`;
+                        const labelPinyin = toPinyin(label.replace('/',''));
+                        fieldAcc += `id:__panelId_${labelPinyin}__\n|type:__String__\n|afterNode:0\n|section:${section}\n|col:${col}\n|label:${label}\n|required:0`;
                         if (fieldIdx !== fieldArr.length - 1) fieldAcc += ',\n\n';
                         return fieldAcc;
                       }, '');
@@ -334,6 +358,46 @@ export default {
                   }
                 }
               ]
+            },
+            {
+              type: 'textarea',
+              decorator: ['initialBatchBtns',{initialValue:''}],
+              formItem: {
+                label: '右侧按钮'
+              },
+              field: {
+                placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:'
+              },
+              btns: [
+                {
+                  text: '解析',
+                  action: ({fieldsValue}) => {
+                    fieldsValue.batchBtns = this.splitColonToVal({
+                      fieldValue: fieldsValue.initialBatchBtns,
+                      accCtrl: ({entry:text,idx}) => {
+                        let actionType = 'action';
+                        let key = `__batchBtn${idx}__`;
+                        const textMapType = {
+                          '下载模板': 'downloadTemplate',
+                          '导入': 'import',
+                          '导出': 'export'
+                        }
+                        if (textMapType[text]) key = actionType = textMapType[text];
+                        let attr = `text:${text}\n|key:${key}\n|actionType:${actionType}\n|type:primary`;
+                        if (['import','export'].includes(actionType)) attr += '\n|url:__url__';
+                        return attr;
+                      }
+                    })
+                  }
+                }
+              ]
+            },
+            {
+              type: 'textarea',
+              decorator: ['batchBtns',{initialValue:''}],
+              formItem: {
+                label: '格式化右侧按钮'
+              },
             }
           ],
           table: [
@@ -350,25 +414,26 @@ export default {
                 allowClear: true,
                 autoSize: { minRows: 4 },
                 placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:\nemum:\n0-否/1-是'
-              }
-            },
-            {
-              type: 'btn',
-              text: '解析',
-              action: ({fieldsValue}) => {
-                fieldsValue.columns = this.splitColonToVal({
-                  fieldValue: fieldsValue.columns,
-                  accCtrl: ({entry:title}) => {
-                    const titlePinyin = toPinyin(title);
-                    let attrs = `title:${title}\n|dataIndex:__tableIdx_${titlePinyin}__\n|emum:0\n|render:0`
-                    if (title === '操作') {
-                      attrs += `\n|actionBtns:action-编辑-edit/action-删除-delete`;
-                      attrs = attrs.replace(`tableIdx${titlePinyin}`,'action');
-                    }
-                    return attrs;
+              },
+              btns: [
+                {
+                  text: '解析',
+                  action: ({fieldsValue}) => {
+                    fieldsValue.columns = this.splitColonToVal({
+                      fieldValue: fieldsValue.columns,
+                      accCtrl: ({entry:title}) => {
+                        const titlePinyin = toPinyin(title.replace('/',''));
+                        let attrs = `title:${title}\n|dataIndex:__tableIdx_${titlePinyin}__\n|emum:0\n|render:0`
+                        if (title === '操作') {
+                          attrs += `\n|actionBtns:action-编辑-edit/action-删除-delete`;
+                          attrs = attrs.replace(`tableIdx${titlePinyin}`,'action');
+                        }
+                        return attrs;
+                      }
+                    })
                   }
-                })
-              }
+                }
+              ]
             },
             {
               type: 'input',
@@ -392,44 +457,40 @@ export default {
             },
             {
               type: 'textarea',
-              decorator: ['batchBtns',{
-                // initialValue:'新增:导入:导出'
-                initialValue:''
-              }],
+              decorator: ['batchBtns',{initialValue:''}],
               formItem: {
                 label: '表格按钮'
               },
               field: {
-                allowClear: true,
-                autoSize: { minRows: 4 },
                 placeholder: '分隔符：\n1、中文冒号：\n2、英文冒号:'
-              }
-            },
-            {
-              type: 'btn',
-              text: '解析',
-              action: ({fieldsValue}) => {
-                fieldsValue.batchBtns = this.splitColonToVal({
-                  fieldValue: fieldsValue.batchBtns,
-                  accCtrl: ({entry:text,idx}) => {
-                    let attrs = `text:${text}\n|key:__batchBtn${idx}__\n|actionType:action\n|type:primary`;
-                    const txtMapKey = {
-                      '新增': 'add',
-                      '导入': 'import',
-                      '导出': 'export',
-                    }
-                    if (['新增','导入','导出'].includes(text)) {
-                      if (['导入','导出'].includes(text)) {
-                        attrs += `\n|url:__${this.addModal[txtMapKey[text] + 'Url']}__`;
-                        attrs = attrs.replace('primary','secondary')
-                            .replace('|actionType:action\n','');
+              },
+              btns: [
+                {
+                  text: '解析',
+                  action: ({fieldsValue}) => {
+                    fieldsValue.batchBtns = this.splitColonToVal({
+                      fieldValue: fieldsValue.batchBtns,
+                      accCtrl: ({entry:text,idx}) => {
+                        let attrs = `text:${text}\n|key:__batchBtn${idx}__\n|actionType:action\n|type:primary`;
+                        const txtMapKey = {
+                          '新增': 'add',
+                          '导入': 'import',
+                          '导出': 'export',
+                        }
+                        if (['新增','导入','导出'].includes(text)) {
+                          if (['导入','导出'].includes(text)) {
+                            attrs += `\n|url:__${this.addModal[txtMapKey[text] + 'Url']}__`;
+                            attrs = attrs.replace('primary','secondary')
+                                .replace('|actionType:action\n','');
+                          }
+                          attrs = attrs.replace(`batchBtn${idx}`,txtMapKey[text]);
+                        }
+                        return attrs;
                       }
-                      attrs = attrs.replace(`batchBtn${idx}`,txtMapKey[text]);
-                    }
-                    return attrs;
+                    })
                   }
-                })
-              }
+                }
+              ]
             },
           ],
           request: [

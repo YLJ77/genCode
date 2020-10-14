@@ -172,9 +172,13 @@ function formatOutput({data = {},  msg, code = 0, err} = {}) {
 }
 
 function genFormItem({info}) {
-    let {label,id,type,required} = info;
+    let {label,id,type,required,afterNode} = info;
     type = upCase0(type);
     const placeholder = ['Select','Date'].includes(type) ? 'pleaseSelect': 'pleaseEnter';
+    const afterNodeInfo = {key: '',text: ''};
+    if (afterNode !== '0' && afterNode !== undefined) {  // 等于1时执行
+        [afterNodeInfo.text,afterNodeInfo.key] = afterNode.split('-');
+    }
     return `
             {
                 type: '${upCase0(type)}',
@@ -183,7 +187,8 @@ function genFormItem({info}) {
                     label: translate('${id}'),  // ${label}
                     placeholder: translate('${placeholder}'), // ${translate[placeholder]}
                     rules: [${required === '1' ? '{required:true}' : ''}],
-                    ${type === 'Select' ? 'data: []' : ''}
+                    ${type === 'Select' ? 'data: [],' : ''}
+                    ${(afterNode === '0' || afterNode === undefined) ? '' : `afterNode:<YXButton text={translate('${afterNodeInfo.key}')} /> // ${afterNodeInfo.text}`} 
                 }
             },`;
 }
