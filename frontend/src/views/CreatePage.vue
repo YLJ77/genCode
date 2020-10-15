@@ -10,6 +10,7 @@
                :cfg="table.cfg">
       <template v-slot:action="{props:{text,index,record}}">
         <a-button :loading="table[`btnLoading${index}`]" @click="visiblePageInfo({text,index,record})" type="link">编辑</a-button>
+        <a-button :loading="table[`btnDelLoading${index}`]" @click="delPage({text,index,record})" type="link">删除</a-button>
       </template>
     </app-table>
     <a-modal
@@ -588,11 +589,23 @@ export default {
     ...mapActions('createPage', [
       'addPage',
       'editPage',
+      'deletePage',
       'getPageList',
       'getPageInfo',
       'uploadFile',
       'replacePageField'
     ]),
+    delPage({record,index}) {
+      this.deletePage({
+        cb: loading => this.table[`btnDelLoading${index}`] = loading,
+        params: {
+          id: record.id
+        }
+      }).then(res => {
+        this.$message.success('删除成功');
+        this.getList();
+      });
+    },
     genUploadCfg({
                    fieldName = 'file',
                    cb = () =>{},

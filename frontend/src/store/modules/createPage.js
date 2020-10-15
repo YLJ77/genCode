@@ -26,6 +26,10 @@ export default {
         //  修改页面
         async editPage({}, params) {
             return await xhr.fetch({url: `/page/${params.params.id}`, method: 'PATCH', ...params});
+        },
+        //  删除页面
+        async deletePage({}, params) {
+            return await xhr.fetch({url: `/page/${params.params.id}`, method: 'DELETE', ...params});
         }
     }
 }

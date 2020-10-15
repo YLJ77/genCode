@@ -188,7 +188,7 @@ function genFormItem({info}) {
                     placeholder: translate('${placeholder}'), // ${translate[placeholder]}
                     rules: [${required === '1' ? '{required:true}' : ''}],
                     ${type === 'Select' ? 'data: [],' : ''}
-                    ${(afterNode === '0' || afterNode === undefined) ? '' : `afterNode:<YXButton text={translate('${afterNodeInfo.key}')} /> // ${afterNodeInfo.text}`} 
+                    ${(afterNode === '0' || afterNode === undefined) ? '' : `afterNode:<YxButton onClick={()=>{}} text={translate('${afterNodeInfo.key}')} /> // ${afterNodeInfo.text}`} 
                 }
             },`;
 }

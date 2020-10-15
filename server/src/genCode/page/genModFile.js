@@ -8,9 +8,27 @@ module.exports.genModFile = ({cfg}) => {
         fileName = fileName[0].toUpperCase() + fileName.slice(1) + 'Mod';  // 首字母大写
         let data = `import { observable } from 'mobx';
 
+function getDict() {
+  const dict = {
+      trueFalse: [
+          {label: '是', val: '1'},
+          {label: '否', val: '0'},
+      ]
+  }
+  return Object.keys(dict).reduce((acc,key)=>{
+      acc[key] = {list: dict[key]}
+      acc[key].emum = dict[key].reduce((acc,entry) => {
+          acc[entry.val] = entry.label
+          return acc;
+      }, {})
+      return acc;
+  },{});
+}
+
 class ${fileName} {
   @observable state = {
   }
+  dict = getDict()
 }
 
 const mod = new ${fileName}();

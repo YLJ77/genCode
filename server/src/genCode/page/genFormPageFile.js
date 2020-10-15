@@ -47,6 +47,7 @@ class ${fileName}View extends Component {
     super(props, context);
     this.appStore = this.props.AppStore;
     this.store = this.props.${modal.title ? modal.parentFileName : fileName}Mod;
+    this.dict = this.store.dict;
     this.translate = () => '';
     this.state = {
         dict: {list: [],emum:[]},

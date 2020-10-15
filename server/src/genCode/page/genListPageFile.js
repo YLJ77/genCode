@@ -105,6 +105,7 @@ class ${fileName}View extends Component {
     super(props, context);
     this.appStore = this.props.AppStore;
     this.store = this.props.${modal.title ? modal.parentFileName : fileName}Mod;
+    this.dict = this.store.dict;
     this.translate = () => '';
     this.state = {
         version: 0,
@@ -219,9 +220,14 @@ class ${fileName}View extends Component {
           headers: { 'Content-type': 'application/json' },
           beforeRequest: data => {
             // todo delete-begin
-            this.state.table.dataSource = this.tableParam().columns.map(column => column.dataIndex).reduce((acc,dataIndex,idx,arr) => {
+            const columns = this.tableParam().columns;
+            this.state.table.dataSource = columns.map(column => column.dataIndex).reduce((acc,entry,idx,dataIndexes) => {
                 const row = {id: idx};
-                arr.forEach((entry,index) => row[entry] = \`\${idx}_\${index}\`);
+                dataIndexes.forEach((dataIndex,index) => {
+                    const column = columns.find(column => column.dataIndex === dataIndex);
+                    const {emum,fakeVal} = column;
+                    row[dataIndex] = fakeVal || (emum && emum[Object.keys(emum)[0]]) || \`\${idx}_\${index}\`;
+                });
                 acc.push(row);
                 return acc;
             }, [])
@@ -283,10 +289,10 @@ class ${fileName}View extends Component {
         }
       <YxListPage {...params}/>
       ${
-          global.showSelected && `<AppSelectedRowList
+          global.showSelected === '1' ? `<AppSelectedRowList
               displayKey='${global.selectedRowDisplayKey}'
               selectedRows={this.state.table.selectedRows}
-              onTagClose={params => this.onTagClose(params)}/>`
+              onTagClose={params => this.onTagClose(params)}/>` : ''
       }
       ${modal.title && '</div>\n</Modal>'}
     </div>
