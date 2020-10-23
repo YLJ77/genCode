@@ -703,7 +703,6 @@ export default {
         export: '导出',
         import: '导入'
       }
-      const {} = addModal;
       if (matches) {
         type = map[matches[0]];
         const {requestForm} = this.$refs;

@@ -27,13 +27,11 @@
   .ml20 {
     margin-left: 20px;
   }
-  :deep {
-    td {
+  ::v-deep(td) {
       white-space: nowrap;
       text-overflow: ellipsis;
       max-width: 200px;
       overflow: hidden;
-    }
   }
 }
 </style>
