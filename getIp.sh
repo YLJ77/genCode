@@ -1,5 +1,8 @@
 #!/bin/sh
 
+SLEEP_SEC=5
+COUNT_DOWN=$SLEEP_SEC
+
 while true
 do
 	#The file that contains the current pubic IP
@@ -26,6 +29,12 @@ do
 		echo "The IP Address at home is the same
 		The IP address at home stayed the same $CURRENT_IP"
 	fi
-	echo "sleep 60s"
-	sleep 60
+	echo "sleep $SLEEP_SEC s"
+	while [$COUNT_DOWN -eq 0]
+		echo "COUNT DOWN $COUNT_DOWN"
+		(($COUNT_DOWN--))
+		sleep 1
+
+	do
+		$COUNT_DOWN=$SLEEP_SEC
 done
