@@ -18,7 +18,9 @@ do
 		KNOWN_IP=
 	fi
 	#See if the IP has changed
-	if [ "$CURRENT_IP" != "$KNOWN_IP" ]; then
+	if [ -z "$CURRENT_IP" ]; then
+		echo "Empty IP Address $CURRENT_IP"
+	elif [ "$CURRENT_IP" != "$KNOWN_IP" ]; then
 		echo $CURRENT_IP > $EXT_IP_FILE
 		#If so send an alert
 		echo "The IP Address at home has changed
