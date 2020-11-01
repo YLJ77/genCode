@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SLEEP_SEC=5
+SLEEP_SEC=$((60 * 10))
 COUNT_DOWN=$SLEEP_SEC
 
 while true
@@ -34,6 +34,8 @@ do
 		The IP address at home stayed the same $CURRENT_IP"
 	fi
 	echo "sleep $SLEEP_SEC s"
+	sleep $SLEEP_SEC
+	: <<'countDown'
 	while [ $COUNT_DOWN -gt 0 ]
 	do
 		echo "COUNT DOWN $COUNT_DOWN"
@@ -41,4 +43,5 @@ do
 		sleep 1
 	done
 	COUNT_DOWN=$SLEEP_SEC
+countDown
 done
