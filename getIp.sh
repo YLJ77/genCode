@@ -8,7 +8,8 @@ do
 	#The file that contains the current pubic IP
 	EXT_IP_FILE="./curIp.txt"
 	#Get the current public IP from whatsmyip.com
-	CURRENT_IP=$(curl http://ifconfig.me/ip)
+	#CURRENT_IP=$(curl http://ifconfig.me/ip)
+	CURRENT_IP=$(date +%s)
 	#Check file for previous IP address
 	if [ -f $EXT_IP_FILE ]; then
 		KNOWN_IP=$(cat $EXT_IP_FILE)
@@ -30,11 +31,11 @@ do
 		The IP address at home stayed the same $CURRENT_IP"
 	fi
 	echo "sleep $SLEEP_SEC s"
-	while [$COUNT_DOWN -gt 0]
+	while [ $COUNT_DOWN -gt 0 ]
 	do
 		echo "COUNT DOWN $COUNT_DOWN"
-		(($COUNT_DOWN--))
+		COUNT_DOWN=$((COUNT_DOWN-1))
 		sleep 1
 	done
-	$COUNT_DOWN=$SLEEP_SEC
+	COUNT_DOWN=$SLEEP_SEC
 done
