@@ -53,7 +53,7 @@
             <a-menu>
               <a-menu-item v-for="extension in ['View.js','Serv.js','Less.less','Mod.js','.json','.zip']" :key="extension">
                 <a v-if="extension === '.zip'" :href="`http://127.0.0.1:3000/genFile/${$refs?.globalForm?.form?.fileName + extension}`" target="_blank">{{$refs?.globalForm?.form?.fileName + extension}}</a>
-                <a v-else :href="`http://127.0.0.1:3000/genFile/output/${$refs?.globalForm?.form?.fileName + extension}`" target="_blank">{{$refs?.globalForm?.form?.fileName + extension}}</a>
+                <a v-else :href="`${baseUrl}/genFile/output/${$refs?.globalForm?.form?.fileName + extension}`" target="_blank">{{$refs?.globalForm?.form?.fileName + extension}}</a>
               </a-menu-item>
             </a-menu>
           </template>
@@ -77,10 +77,12 @@ import AppUpload from "@/components/AppUpload";
 import {mapActions} from 'vuex'
 import {upCase0, toPinyin,listToObj} from "@/utils/appFunc";
 import {DownOutlined} from '@ant-design/icons-vue'
+import {baseUrl} from "@/utils/xhr";
 
 export default {
   data() {
     return {
+      baseUrl,
       fileList: [],
       searchFieldList: [
         {
