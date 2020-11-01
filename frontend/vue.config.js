@@ -1,18 +1,13 @@
+const path = require('path');
+
 module.exports = {
-    css: {
-        extract: false,
-    },
     configureWebpack: {
         devServer: {
             disableHostCheck: true
         },
-        output: {
-            filename: 'main.user.js'
-        },
-        optimization: {
-            splitChunks: false
-        },
+        // output: {
+        //     path: path.resolve(__dirname, '../server/public')
+        // },
     },
-    productionSourceMap: false,
-    filenameHashing: false
-  }
+    outputDir: path.resolve(__dirname, '../server/public')
+}
