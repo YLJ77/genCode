@@ -1,10 +1,15 @@
 const {genServeFile,genFormPageFile,genListPageFile,genLessFile,genTranslateFile,genModFile} = require("./index");
 const {delDirFiles, zipFile, upCase0} = require('../../util/appFunc');
 const path = require('path');
+const fs = require('fs');
 
 module.exports.genPageFile = ({cfg}) => {
     return new Promise(async resolve => {
-        const archivePath = path.join(__dirname, '../../../public/genFile/output');
+        const dirPath = path.join(__dirname, '../../../public/genFile/output');
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath, {recursive: true});
+        }
+        const archivePath = dirPath;
         const outputPath = path.join(__dirname, '../../../public/genFile');
         const config = JSON.parse(cfg.pageCfg);
         const {global} = config;
