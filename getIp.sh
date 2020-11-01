@@ -30,11 +30,11 @@ do
 		The IP address at home stayed the same $CURRENT_IP"
 	fi
 	echo "sleep $SLEEP_SEC s"
-	while [$COUNT_DOWN -eq 0]
+	while [$COUNT_DOWN -gt 0]
+	do
 		echo "COUNT DOWN $COUNT_DOWN"
 		(($COUNT_DOWN--))
 		sleep 1
-
-	do
-		$COUNT_DOWN=$SLEEP_SEC
+	done
+	$COUNT_DOWN=$SLEEP_SEC
 done
