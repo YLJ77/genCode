@@ -8,8 +8,9 @@ do
 	#The file that contains the current pubic IP
 	EXT_IP_FILE="./curIp.txt"
 	#Get the current public IP from whatsmyip.com
+	CURRENT_IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
 	#CURRENT_IP=$(curl http://ifconfig.me/ip)
-	CURRENT_IP=$(date +%s)
+	#CURRENT_IP=$(date +%s)
 	#Check file for previous IP address
 	if [ -f $EXT_IP_FILE ]; then
 		KNOWN_IP=$(cat $EXT_IP_FILE)
