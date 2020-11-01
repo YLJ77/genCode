@@ -28,9 +28,9 @@ module.exports.genPageFile = ({cfg}) => {
         const err = translateErr || serveErr || lessErr || viewErr || modErr;
         const data = {translate,serv,less,view,mod, err};
         zipFile({
-            onClose: () => resolve(data),
             outputPath: outputPath + `/${fileName}.zip`,
             archiveDir: archivePath
         })
+	    resolve(data);
     })
 }
