@@ -1,8 +1,8 @@
 import axios from 'axios'
 import {message,Modal} from "ant-design-vue";
 
-export const baseUrl = 'http://127.0.0.1:3000';
-// const baseUrl = 'http://119.129.96.242:3000';
+// export const baseUrl = 'http://127.0.0.1:3000';
+export const baseUrl = 'http://119.129.96.242:3000';
 
 axios.defaults.baseURL = baseUrl;
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SLEEP_SEC=$((60 * 10))
+SLEEP_SEC=$((60 ))
 COUNT_DOWN=$SLEEP_SEC
 
 while true
