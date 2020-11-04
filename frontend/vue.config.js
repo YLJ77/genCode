@@ -10,5 +10,12 @@ module.exports = {
         //     path: path.resolve(__dirname, '../server/public')
         // },
     },
-    outputDir: path.resolve(__dirname, '../server/public')
+    outputDir: path.resolve(__dirname, '../server/public'),
+    chainWebpack: config => {
+        config.module
+            .rule('raw-loader')
+            .test(/\.txt$/)
+            .use('raw-loader')
+            .loader('raw-loader')
+    }
 }
