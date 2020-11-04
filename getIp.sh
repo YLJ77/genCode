@@ -28,6 +28,9 @@ do
 		git commit -am "[AUTO_COMMIT] IP change"
 		git pull
 		git push
+		cd ./frontend || exit
+		yarn build
+		cd ..
 	else
 		#If not just report that it stayed the same
 		echo "The IP Address at home is the same
