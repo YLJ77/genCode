@@ -9,4 +9,5 @@ git push
 cd ./frontend || exit
 yarn build
 cd ..
+pwd
 
