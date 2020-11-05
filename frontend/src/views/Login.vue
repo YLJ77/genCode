@@ -61,6 +61,7 @@ export default {
           params: fieldsValue
         }).then((res) => {
           localStorage.setItem('token', res.data.token);
+          window.opener.postMessage(res.data.token, 'https://www.lagou.com')
           this.$message.success('登录成功');
           this.$router.push('/home/create-page');
         })
