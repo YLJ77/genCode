@@ -1,13 +1,16 @@
 <template>
   <div class="app-hc-vc">
     <AppForm
-        style="width: 300px;margin-top:50px;"
+        style="width: 255px;margin-top:50px;"
         :field-cfg-list="fieldCfgList"
+        :form-cfg="{layout: 'inline'}"
         :footer-visible="false"
     >
       <template v-slot:footer="{props:{getForm}}">
         <div class="app-hc-vc" style="margin-top:20px;">
-          <a-button @click="toLogin({getForm})" type="primary" :loading="loginBtnLoading">登录</a-button>
+          <div style="width: 187px;">
+            <a-button block @click="toLogin({getForm})" type="primary" :loading="loginBtnLoading">登录</a-button>
+          </div>
         </div>
       </template>
     </AppForm>
@@ -26,7 +29,7 @@ export default {
       {
         type: 'input',
         formItem: {
-          label: '账号',
+          label: '账号'
         },
         decorator: ['email', {
           rules: [
@@ -61,7 +64,11 @@ export default {
           params: fieldsValue
         }).then((res) => {
           localStorage.setItem('token', res.data.token);
-          window.opener.postMessage(res.data.token, 'https://www.lagou.com')
+          if (window.opener) {
+            window?.opener?.postMessage({token:res.data.token}, 'https://www.lagou.com')
+            window.close();
+            return;
+          }
           this.$message.success('登录成功');
           this.$router.push('/home/create-page');
         })

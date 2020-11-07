@@ -16,6 +16,11 @@
                 <slot :name="cfg.decorator[0] + 'AddonBefore'" :props="{form,cfg}"></slot>
               </template>
             </a-input>
+            <a-input-password v-if="cfg.type === 'password'"
+                     :type="cfg.inputType || 'text'"
+                     v-model:value="form[getDecoratorId(cfg)]"
+                     v-bind="cfg.field || {}"
+            />
             <div class="textarea-wrap" v-else-if="cfg.type === 'textarea'">
               <a-textarea v-model:value="form[getDecoratorId(cfg)]"
                         v-bind="cfg.field || {}"
@@ -154,6 +159,9 @@ export default {
       this.$refs.ruleForm.resetFields();
       this.$emit('update:visible', false);
     }
+  },
+  mounted() {
+    this.mode === 'searchBar' && this.search();
   }
 }
 </script>

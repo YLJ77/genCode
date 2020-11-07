@@ -2,8 +2,8 @@ import axios from 'axios'
 import {message,Modal} from "ant-design-vue";
 import ip from '../../../curIp.txt'
 const curIp = ip.trim();
-// export const baseUrl = 'http://127.0.0.1:3000';
-export const baseUrl = `http://${curIp}:3000`;
+
+export const baseUrl = process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:3000' : `http://${curIp}:3000`;
 
 axios.defaults.baseURL = baseUrl;
 
@@ -51,6 +51,7 @@ export default class Request {
                      params = {},
                      headers = {},
                      cb = Function.prototype,
+                     hideParams = false
                  }) {
         headers = {
             ...headers,
@@ -63,7 +64,7 @@ export default class Request {
                 headers,
             };
             if (method.toUpperCase() === 'GET') {
-                requestInfo.params = params;
+                if (!hideParams) requestInfo.params = params;
             } else {
                 requestInfo.data = params;
             }

@@ -6,7 +6,7 @@
         @search="getList"
     />
     <app-table style="margin-top:20px;"
-               :top-btns="table.topBtns"
+               :header-btns="table.headerBtns"
                :cfg="table.cfg">
       <template v-slot:action="{props:{text,index,record}}">
         <a-button :loading="table[`btnLoading${index}`]" @click="visiblePageInfo({text,index,record})" type="link">编辑</a-button>
@@ -559,7 +559,7 @@ export default {
             }
           ]
         },
-        topBtns: [
+        headerBtns: [
           {
             text: '新增',
             evt: {
@@ -580,7 +580,7 @@ export default {
               loading: false,
             },
             upload: this.genUploadCfg({
-              cb: loading => this.table.topBtns[1].attr.loading = loading
+              cb: loading => this.table.headerBtns[1].attr.loading = loading
             }),
           },
         ]

@@ -23,7 +23,7 @@ router.post('/user/login', async (req, res) => {
             const token = await user.generateAuthToken();
             res.send(formatOutput({data: {user,token}}));
         } else {
-            res.send(formatOutput({msg: '账号或密码错误'}));
+            res.send(formatOutput({msg: '账号或密码错误', code: 2}));
         }
     } catch (e) {
         res.status(400).send(e)
@@ -54,47 +54,50 @@ router.post('/user/logoutAll', auth, async (req, res) => {
 
 router.post('/user/list', auth, async (req, res) => {
     try {
-        const {email} = req.body;
+        const {pageSize = 10,curPage = 1,email} = req.body;
         const reg = new RegExp(email, 'i');
-        const users = await User.find({
+        const query = {
             $or: [
                 {email: {$regex: reg}}
             ]
-        })
-        res.send(formatOutput({data: {list:users}}));
+        }
+        User.find(query).limit(pageSize)
+            .skip(pageSize * (curPage - 1))
+            .sort({createdAt: -1})
+            .exec((err, doc)  => {
+                if (err) return res.json(err)
+                User.countDocuments(query).exec((countErr, count) => {
+                    if (countErr) return res.json(countErr);
+                    const data = { total:count, curPage, pageSize, list: doc }
+                    return res.json(formatOutput({data}))
+                })
+            })
     } catch (e) {
         res.status(500).send(formatOutput({data: e, code: 1}))
     }
 });
 
-router.get('/user/me', auth, async (req, res,next) => {
-    res.send(formatOutput({data: req.user}));
+router.get('/user/:id', auth, async (req, res,next) => {
+    const user = await User.findById(req.params.id);
+    res.send(formatOutput({data: user}));
     next();
 });
 
-router.patch('/user/me', auth, async (req, res) => {
-    const updates = Object.keys(req.body);
-    const allowedUpdates = ['name', 'email', 'password', 'age'];
-    const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
-
-    if (!isValidOperation) {
-        return res.status(400).send({ errMsg: 'Invalid updates!' })
-    }
+router.patch('/user/:id', auth, async (req, res) => {
 
     try {
-        const user = req.user;
-
-        updates.forEach((update) => user[update] = req.body[update]);
-        await user.save();
+        const {email,password} = req.body;
+        const user = await User.findByIdAndUpdate(req.body.id,{password,email},{useFindAndModify: false});
         res.send(formatOutput({data: {user}}));
     } catch (e) {
         res.status(400).send(e)
     }
 });
 
-router.delete('/user/me', auth, async (req, res) => {
+router.delete('/user/:id', auth, async (req, res) => {
     try {
-        await req.user.remove();
+        // await req.user.remove();
+        await User.findByIdAndDelete(req.params.id);
         res.send(formatOutput({data: {msg: 'success'}}));
     } catch (e) {
         res.status(500).send(e)
