@@ -9,15 +9,16 @@ export default {
         },
         //  获取用户信息
         async getUserInfo({}, params) {
-            return await xhr.fetch({url: '/user/me', method: 'GET', ...params});
+            params.hideParams = true;
+            return await xhr.fetch({url: `/user/${params.params.id}`, method: 'GET', ...params});
         },
         //  更新用户信息
         async updateUser({}, params) {
-            return await xhr.fetch({url: '/user/me', method: 'PATCH', ...params});
+            return await xhr.fetch({url: `/user/${params.params.id}`, method: 'PATCH', ...params});
         },
         //  删除用户
         async deleteUser({}, params) {
-            return await xhr.fetch({url: '/user/me', method: 'DELETE', ...params});
+            return await xhr.fetch({url: `/user/${params.params.id}`, method: 'DELETE', ...params});
         },
         //  创建用户
         async addUser({}, params) {

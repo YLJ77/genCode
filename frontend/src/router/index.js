@@ -21,6 +21,10 @@ const routes = [
         path: 'create-page',
         component: () => import('@/views/CreatePage')
       },
+      {
+        path: 'black-list',
+        component: () => import('@/views/BlackList')
+      },
     ]
   },
   {

@@ -111,6 +111,14 @@ userSchema.pre('remove', async function (next) {
     next()
 });
 
+userSchema.methods.toJSON = function () {
+    const page = this;
+    const pageObject = page.toObject();
+
+    pageObject.id = pageObject._id;
+    return pageObject
+};
+
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

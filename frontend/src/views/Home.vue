@@ -34,6 +34,7 @@ export default {
       menuList: [
         { key: 'user' },
         { key: 'create-page' },
+        { key: 'black-list' },
       ]
     });
     return {...toRefs(data)};

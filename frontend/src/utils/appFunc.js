@@ -8,6 +8,22 @@ export function toPinyin(chinese) {
         }, '');
 }
 
+export class Middleware {
+    use(fn) {
+        this.go = (stack => next => stack(fn.bind(this, next.bind(this))))(this.go);
+    }
+    go = next => next();
+}
+
+export const compose = (...fns) => x => fns.reduceRight((y, f) => f(y), x);
+
+export function initMiddleware() {
+    return ['list','add','delete','edit','info'].reduce((acc,key) => {
+        acc[`${key}Entry`] = new Middleware();
+        return acc;
+    }, {})
+}
+
 export const upCase0 = str => {
     return str[0].toUpperCase() + str.slice(1)
 }
