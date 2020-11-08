@@ -10,24 +10,30 @@ import {Middleware} from "@/utils/appFunc";
 
 export default {
   created() {
+    const args = {foo: 'a'};
     const app = new Middleware();
-/*
-    app.use(next => {
+    app.use((next, params) => {
+          console.warn(params);
+          params.a = 'a';
           setTimeout(() => {
             console.warn('first')
             next();
-          }, 2000)
+          }, 100)
         }
     )
-    app.use(next => {
+    app.use((next, params) => {
+          params.b = 'b';
           setTimeout(() => {
             console.warn('second')
             next();
           }, 0)
         }
     )
-*/
-    app.go(() => console.log('last'));
+app.appendParams(args)
+    app.go(() => {
+      console.log(app.params);
+      console.log('last')
+    }, args)
   }
 }
 </script>

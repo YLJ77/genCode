@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const pageRouter = require('./routers/page');
 const userRouter = require('./routers/user');
+const blackListRouter = require('./routers/blackList');
 require('./db/mongoose');
 
 const port = process.env.PORT || 3000;
@@ -13,6 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(pageRouter);
 app.use(userRouter);
+app.use(blackListRouter);
 app.use(express.static('public'))
 
 

@@ -9,10 +9,18 @@ export function toPinyin(chinese) {
 }
 
 export class Middleware {
-    use(fn) {
-        this.go = (stack => next => stack(fn.bind(this, next.bind(this))))(this.go);
+    constructor(params = {}) {
+        this.params = params;
     }
-    go = next => next();
+    use(fn) {
+        this.go = (stack => next => stack(fn.bind(this,next.bind(this), this.params)))(this.go);
+    }
+    appendParams(params) {
+        Object.keys(params).forEach(key => {
+            this.params[key] = params[key];
+        })
+    }
+    go = next => next()
 }
 
 export const compose = (...fns) => x => fns.reduceRight((y, f) => f(y), x);

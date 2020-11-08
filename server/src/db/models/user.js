@@ -65,6 +65,7 @@ userSchema.methods.toJSON = function () {
 
     delete userObject.password;
     delete userObject.tokens;
+    userObject.id = userObject._id;
 
     return userObject
 };
@@ -110,14 +111,6 @@ userSchema.pre('remove', async function (next) {
     await Page.deleteMany({ owner: user._id });
     next()
 });
-
-userSchema.methods.toJSON = function () {
-    const page = this;
-    const pageObject = page.toObject();
-
-    pageObject.id = pageObject._id;
-    return pageObject
-};
 
 const User = mongoose.model('User', userSchema);
 

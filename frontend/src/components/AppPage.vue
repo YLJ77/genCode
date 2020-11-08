@@ -85,11 +85,14 @@ export default {
     onModalSave({fieldsValue}) {
       const {formModal: {type, selectedRow}} = this;
       if (type === 'edit') fieldsValue.id = selectedRow.id;
-      middleware[`${type}Entry`].go(() => {
-        this.requestList[`${type}Item`]({
-          cb: loading => this.formModal.saveBtnLoading = loading,
-          params: fieldsValue
-        }).then(() => {
+      const params = {
+        cb: loading => this.formModal.saveBtnLoading = loading,
+        params: fieldsValue
+      }
+      const modalMiddleware = middleware[`${type}Entry`];
+      modalMiddleware.appendParams(params)
+      modalMiddleware.go(() => {
+        this.requestList[`${type}Item`](modalMiddleware.params).then(() => {
           this.$message.success('新增成功');
           this.formModal.visible = false;
           this.getSearchList({fieldsValue: this.searchFieldsValue});
@@ -133,11 +136,13 @@ export default {
         confirmCfg: {
           evt: {
             confirm: ({record}) => {
+              const params = {
+                cb: loading => record.deleteLoading = loading,
+                params: {id: record.id}
+              }
+              deleteEntry.appendParams(params);
               deleteEntry.go(() => {
-                this.requestList.deleteItem({
-                  cb: loading => record.deleteLoading = loading,
-                  params: {id: record.id}
-                }).then(() => {
+                this.requestList.deleteItem(deleteEntry.params).then(() => {
                   this.$message.success('删除成功');
                   this.getSearchList({fieldsValue: this.searchFieldsValue});
                 })
@@ -153,11 +158,13 @@ export default {
           click: ({record}) => {
             this.formModal.type = 'edit';
             this.formModal.selectedRow = record;
+            const params = {
+              cb: loading => record.editLoading = loading,
+              params: {id: record.id}
+            }
+            infoEntry.appendParams(params);
             infoEntry.go(() => {
-              this.requestList.infoItem({
-                cb: loading => record.editLoading = loading,
-                params: {id: record.id}
-              }).then(res => {
+              this.requestList.infoItem(infoEntry.params).then(res => {
                 this.formModal.visible = true;
                 this.$nextTick(() => {
                   const {form} = this.$refs.modalForm;
@@ -207,15 +214,17 @@ export default {
     fetchList({fieldsValue = {}} = {}) {
         const {requestList: {listItem},pagination:{curPage,pageSize}} = this;
         if (listItem) {
+          const params = {
+            cb: loading => this.tableCfg.loading = loading,
+            params: {
+              ...fieldsValue,
+              curPage,
+              pageSize
+            }
+          }
+          listEntry.appendParams(params);
           listEntry.go(() => {
-            listItem({
-              cb: loading => this.tableCfg.loading = loading,
-              params: {
-                ...fieldsValue,
-                curPage,
-                pageSize
-              }
-            }).then(res => {
+            listItem(listEntry.params).then(res => {
               const {data} = res;
               this.tableCfg.dataSource = data.list;
               this.pagination.total = data.total;
