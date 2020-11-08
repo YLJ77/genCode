@@ -7,7 +7,7 @@ while true
 do
 	#The file that contains the current pubic IP
 	EXT_IP_FILE="./curIp.txt"
-	#Get the current public IP from whatsmyip.com
+	#Get the current public IP
 	CURRENT_IP="$(dig +short myip.opendns.com @resolver1.opendns.com)"
 	#CURRENT_IP=$(curl http://ifconfig.me/ip)
 	#CURRENT_IP=$(date +%s)
@@ -17,9 +17,14 @@ do
 	else
 		KNOWN_IP=
 	fi
+	#Print current date time
+	dt=$(date '+%Y/%m/%d %H:%M:%S');
+	echo $dt
 	#See if the IP has changed
 	if [ -z "$CURRENT_IP" ]; then
 		echo "Empty IP Address $CURRENT_IP"
+	elif ![[ "$CURRENT_IP"=~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+		echo "No IP Address:\n$CURRENT_IP"
 	elif [ "$CURRENT_IP" != "$KNOWN_IP" ]; then
 		echo $CURRENT_IP > $EXT_IP_FILE
 		#If so send an alert
