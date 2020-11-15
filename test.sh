@@ -1,13 +1,12 @@
-#!/bin/sh
-
-EXT_IP_FILE="./curIp.txt"
-echo "$(date +%s)" > $EXT_IP_FILE
-
-git commit -am "[AUTO_COMMIT] TEST BASH"
-git pull
-git push
-cd ./frontend || exit
-yarn build
-cd ..
-pwd
-
+#!/bin/bash
+str='foo = 1
+bar = 2
+boo = 3
+'
+re='bar = ([^\
+	]*)'
+if [[ "$str" =~ $re ]]; then
+	        echo "${BASH_REMATCH[1]}"
+	else
+		        echo no match
+fi

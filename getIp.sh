@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 SLEEP_SEC=$((60 ))
 COUNT_DOWN=$SLEEP_SEC
@@ -23,7 +23,7 @@ do
 	#See if the IP has changed
 	if [ -z "$CURRENT_IP" ]; then
 		echo "Empty IP Address $CURRENT_IP"
-	elif ![[ "$CURRENT_IP"=~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
+	elif ![[ "$CURRENT_IP"=~ [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
 		echo "No IP Address:\n$CURRENT_IP"
 	elif [ "$CURRENT_IP" != "$KNOWN_IP" ]; then
 		echo $CURRENT_IP > $EXT_IP_FILE
